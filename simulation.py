@@ -90,6 +90,44 @@ class Simulation():
             
         return
     
+    def slope(self, v0, deg, length):
+        x = 0
+        x0 = 0
+
+        while x < length:
+            [x, v] = self.step(x0,v0,deg)
+            x0 = x
+            v0 = v
+        return
+    
+    def hill(self, v0, height, length): #assuming no radius at top or bottom
+        x = 0
+        x0 = 0
+
+        deg = math.atan(height/(length/2))
+
+        while x < length/2:
+            [x, v] = self.step(x0,v0,deg)
+            x0 = x
+            v0 = v
+    
+        while x < length:
+            [x, v] = self.step(x0,v0,-deg)
+            x0 = x
+            v0 = v
+        return
+    
+    def curve(self, v0, radius): #check later
+        x = 0
+        x0 = 0
+
+        while x < math.pi*radius:
+            [x, v] = self.step(x0,v0)
+            x0 = x
+            v0 = v
+        
+
+    
 
 
 # Start Simulation 
