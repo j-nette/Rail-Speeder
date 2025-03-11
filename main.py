@@ -76,6 +76,8 @@ class MainWindow(QWidget):
     self.vehicle['width'] = QLineEdit()
     self.vehicle['width'].setText("3")
     self.vehicleParams.addRow(self.tr("&Width [cm]:"), self.vehicle['width'])
+    self.vehicle['eff'] = QLineEdit()
+    self.vehicleParams.addRow(self.tr("&Transmission Efficiency [-]:"), self.vehicle['eff'])
 
     self.paramsBox.setLayout(self.vehicleParams)
     # TODO: Look into using QStackedWidget for the graphs?
@@ -94,13 +96,12 @@ class MainWindow(QWidget):
 
     #Sections
     self.sectionBox = QGroupBox("Track Layout")
-    self.sections = QVBoxLayout()
-    self.sectionBox.setAcceptDrops(True)
+    self.sections = QListWidget()
+    self.sections.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
     for n in self.sectionTypes:
-      btn = DragButton(n)
-      self.sections.addWidget(btn)
+      self.sections.addItem(QListWidgetItem(n))
 
-    self.sectionBox.setLayout(self.sections)
+    #self.sectionBox.setLayout(self.sections)
     # TODO: make this a list
     # https://stackoverflow.com/questions/12877534/python-qt-qlistwidget-items-drag-and-drop/12880300#12880300
 
@@ -116,7 +117,7 @@ class MainWindow(QWidget):
     self.grid.addWidget(self.plots['accel'], 2, 1)
     self.grid.addWidget(self.plots['power'], 2, 2)
     self.grid.addWidget(self.paramsBox, 1, 3)
-    self.grid.addWidget(self.sectionBox, 1, 4)
+    self.grid.addWidget(self.sections, 1, 4)
     self.grid.addWidget(self.trackBox, 2, 4)
     self.grid.addWidget(self.loggingGroupBox, 3, 1, 1, 4)
 
