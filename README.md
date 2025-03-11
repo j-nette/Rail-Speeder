@@ -2,15 +2,10 @@
 
 ### Make your virtual environment
 
-``sudo apt update``
+``python -m venv venv``
 
-``sudo apt install python3 python3-venv``
+``.\venv\Scripts\activate``
 
-Jump here if you have stuff setup
-
-``python3 -m venv .venv``
-
-``source .venv/bin/activate``
 
 ### Install Libraries
 ``pip install requirements.txt``
