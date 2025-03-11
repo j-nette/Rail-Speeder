@@ -148,18 +148,21 @@ class MainWindow(QWidget):
     self.plotLines[name].setData(x, y)
   
   def startSim(self):
-    global vehicleParams 
-    vehicleParams = {
-      'v_mass': float(self.vehicle['mass'].currentText()),
-      'carts': float(self.vehicle['carts'].currentText()),
-      'c_mass': float(self.vehicle['cargo'].currentText()),
-      'ratio': float(self.vehicle['ratio'].currentText()),
-      'radius': float(self.vehicle['radius'].currentText()),
-      'cog': float(self.vehicle['cog'].currentText()),
-      'length': float(self.vehicle['length'].currentText()),
-      'width': float(self.vehicle['width'].currentText()),
-      't_eff': float(self.vehicle['eff'].currentText()),
-    }
+    try:
+      global vehicleParams 
+      vehicleParams = {
+        'v_mass': float(self.vehicle['mass'].text()),
+        'carts': float(self.vehicle['carts'].text()),
+        'c_mass': float(self.vehicle['cargo'].text()),
+        'ratio': float(self.vehicle['ratio'].text()),
+        'radius': float(self.vehicle['radius'].text()),
+        'cog': float(self.vehicle['cog'].text()),
+        'length': float(self.vehicle['length'].text()),
+        'width': float(self.vehicle['width'].text()),
+        't_eff': float(self.vehicle['eff'].text()),
+      }
+    except:
+      return
 
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
