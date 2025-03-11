@@ -2,7 +2,7 @@ import constants as c
 from structures import Vehicle
 
 import math
-import numpy as np
+
 
 class Simulation():
     vehicle = Vehicle()
@@ -13,7 +13,8 @@ class Simulation():
         self.velocity_points = [0]
         self.acceleration_points = [0]
 
-    def start(self):      
+    def start(self, p):   
+        print(p)   
         t = 0 
         isComplete = False
 
@@ -35,7 +36,6 @@ class Simulation():
                 'acceleration': self.acceleration_points
             }
         
-        
 
     def step(self, x0, v0, deg):
         omega_wheel = v0/self.vehicle.wheel_radius/100
@@ -44,9 +44,7 @@ class Simulation():
         torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor
         torque_axel = self.vehicle.gear_ratio*torque_motor*Vehicle.efficiency
 
-
         # Calculating Forces
-
         drag_cart = -c.g*(0.005+0.001*v0)*self.vehicle.totalWeight()*(1+c.Cargo.carts)
         drag_air = -1/2*c.rho*v0*0.1*1
         gravity = 9.81*self.vehicle.totalWeight()*(1+c.Cargo.carts)
@@ -68,7 +66,6 @@ class Simulation():
 
 
         # Update lists
-
         self.time_points.append(t)
         self.position_points.append(x)
         self.velocity_points.append(v)
