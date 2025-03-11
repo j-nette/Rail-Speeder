@@ -1,8 +1,6 @@
 import constants as c
 from structures import Vehicle
 
-#412
-
 import math
 import numpy as np
 
@@ -30,16 +28,12 @@ class Simulation():
         if isComplete is True:
             print('Simulation Complete')
 
-            print(self.time_points)
-            print(self.position_points)
-            print(self.velocity_points)
-            print(self.acceleration_points)
 
             return {
-                'time': np.array(self.time_points),
-                'position': np.array(self.position_points),
-                'velocity': np.array(self.velocity_points),
-                'acceleration': np.array(self.acceleration_points)
+                'time': self.time_points,
+                'position': self.position_points,
+                'velocity': self.velocity_points,
+                'acceleration': self.acceleration_points
             }
         
         
@@ -98,5 +92,5 @@ class Simulation():
 
 # Start Simulation 
 sim = Simulation()    
-sim.start()
+#print(sim.start())
 
