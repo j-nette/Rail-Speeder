@@ -2,10 +2,5 @@
 
 ### Make your virtual environment
 
-``python -m venv venv``
-
-``.\venv\Scripts\activate``
-
-
-### Install Libraries
-``pip install requirements.txt``
+``uv venv``
+``uv run start.py ``
