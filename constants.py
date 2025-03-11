@@ -1,8 +1,8 @@
 import math
 
 g = 9.81
-max_time = 5 # [min]
-dt = 1 # [s]
+max_time = 1 # [min]
+dt = 0.01 # [s]
 rho = 1.2
 
 
