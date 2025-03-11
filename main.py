@@ -4,14 +4,17 @@ from PyQt5.QtWidgets import *
 import pyqtgraph as pg
 
 import logging
+from simulation import Simulation
 
 logging.basicConfig(level=logging.INFO)
 
 graphPen = pg.mkPen(color=(2, 135, 195), width=2)
+sim = Simulation()
 
 class MainWindow(QWidget):
 
   plots = dict()
+  plotLines = dict()
   vehicle = dict()
   track = dict()
   sectionTypes = ["Straight1", "Incline1", "Curve", "Hill", "Incline2", "Straight2"]
@@ -108,6 +111,13 @@ class MainWindow(QWidget):
 
 
     #Simulation
+    self.simButton = QPushButton("Start Simulation")
+    self.simButton.clicked.connect(self.startSim)
+
+    self.buttonsBox = QGroupBox("Simulation")
+    self.buttons = QVBoxLayout()
+    self.buttons.addWidget(self.simButton)
+    self.buttonsBox.setLayout(self.buttons)
     # TODO: Add start simulation button in this section
 
 
@@ -118,6 +128,7 @@ class MainWindow(QWidget):
     self.grid.addWidget(self.plots['power'], 2, 2)
     self.grid.addWidget(self.paramsBox, 1, 3)
     self.grid.addWidget(self.sections, 1, 4)
+    self.grid.addWidget(self.buttonsBox, 2, 3)
     self.grid.addWidget(self.trackBox, 2, 4)
     self.grid.addWidget(self.loggingGroupBox, 3, 1, 1, 4)
 
@@ -130,10 +141,31 @@ class MainWindow(QWidget):
     plot.setLabel("left", ylabel)
     plot.setLabel("bottom", xlabel)
 
-    plot.plot([], [], pen=graphPen)
+    self.plotLines[plotname] = plot.plot([], [], pen=graphPen)
     self.plots[plotname] = plot
 
     return plot
+  
+  def updatePlot(self, name, x, y):
+    self.plotLines[name].setData(x, y)
+  
+  def startSim(self):
+    self.simThread = QThread()
+    self.simWorker = SimulationWorker()
+    self.simWorker.moveToThread(self.simThread)
+
+    self.simThread.started.connect(self.simWorker.run)
+    self.simWorker.finished.connect(self.simThread.quit)
+    self.simWorker.finished.connect(self.simWorker.deleteLater)
+    self.simWorker.finished.connect(self.simData)
+    self.simThread.finished.connect(self.simThread.deleteLater)
+
+    self.simThread.start()
+  
+  def simData(self, data):
+    self.updatePlot("velocity", data['time'], data['velocity'])
+    self.updatePlot("position", data['time'], data['position'])
+    self.updatePlot("accel", data['time'], data['acceleration'])
 
 
 
@@ -157,3 +189,12 @@ class DragButton(QPushButton):
             mime = QMimeData()
             drag.setMimeData(mime)
             drag.exec_(Qt.MoveAction)
+
+class SimulationWorker(QObject):
+  finished = pyqtSignal(dict)
+
+  def run(self):
+      # Here we pass the update_progress (uncalled!)
+      # function to the long_running_function:
+      data = sim.start(self.parent.vehicle)
+      self.finished.emit(data)

@@ -28,7 +28,6 @@ class Simulation():
         if isComplete is True:
             print('Simulation Complete')
 
-
             return {
                 'time': self.time_points,
                 'position': self.position_points,
@@ -87,10 +86,3 @@ class Simulation():
             v0 = v
             
         return
-    
-
-
-# Start Simulation 
-sim = Simulation()    
-#print(sim.start())
-
