@@ -11,8 +11,6 @@ logging.basicConfig(level=logging.INFO)
 graphPen = pg.mkPen(color=(2, 135, 195), width=2)
 sim = Simulation()
 
-vehicleParams = dict()
-
 class MainWindow(QWidget):
 
   plots = dict()
@@ -48,8 +46,6 @@ class MainWindow(QWidget):
     self.generatePlot('velocity', 'Velocity vs. Time', 'Time [s]', 'Velocity [m/s]')
     self.generatePlot('accel', 'Acceleration vs. Time', 'Time [s]', 'Accelertion [m/s^2]')
     self.generatePlot('power', 'Motor Power vs. Time', 'Time [s]', 'Motor Power [%]')
-
-    print(self.plots)
 
     #Program Logs
     self.loggingGroupBox = QGroupBox("Simulation Logs")
@@ -152,7 +148,18 @@ class MainWindow(QWidget):
     self.plotLines[name].setData(x, y)
   
   def startSim(self):
-    vehicleParams = self.vehicle
+    global vehicleParams 
+    vehicleParams = {
+      'v_mass': float(self.vehicle['mass'].currentText()),
+      'carts': float(self.vehicle['carts'].currentText()),
+      'c_mass': float(self.vehicle['cargo'].currentText()),
+      'ratio': float(self.vehicle['ratio'].currentText()),
+      'radius': float(self.vehicle['radius'].currentText()),
+      'cog': float(self.vehicle['cog'].currentText()),
+      'length': float(self.vehicle['length'].currentText()),
+      'width': float(self.vehicle['width'].currentText()),
+      't_eff': float(self.vehicle['eff'].currentText()),
+    }
 
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
