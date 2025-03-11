@@ -11,6 +11,8 @@ logging.basicConfig(level=logging.INFO)
 graphPen = pg.mkPen(color=(2, 135, 195), width=2)
 sim = Simulation()
 
+vehicleParams = dict()
+
 class MainWindow(QWidget):
 
   plots = dict()
@@ -150,6 +152,8 @@ class MainWindow(QWidget):
     self.plotLines[name].setData(x, y)
   
   def startSim(self):
+    vehicleParams = self.vehicle
+
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
     self.simWorker.moveToThread(self.simThread)
@@ -196,5 +200,5 @@ class SimulationWorker(QObject):
   def run(self):
       # Here we pass the update_progress (uncalled!)
       # function to the long_running_function:
-      data = sim.start(self.parent.vehicle)
+      data = sim.start(vehicleParams)
       self.finished.emit(data)
