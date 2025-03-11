@@ -1,8 +1,6 @@
 import constants as c
 from structures import Vehicle
 
-#412
-
 import math
 import numpy as np
 
@@ -30,16 +28,16 @@ class Simulation():
         if isComplete is True:
             print('Simulation Complete')
 
-            print(self.time_points)
-            print(self.position_points)
-            print(self.velocity_points)
-            print(self.acceleration_points)
+            # print(self.time_points)
+            # print(self.position_points)
+            # print(self.velocity_points)
+            # print(self.acceleration_points)
 
             return {
-                'time': np.array(self.time_points),
-                'position': np.array(self.position_points),
-                'velocity': np.array(self.velocity_points),
-                'acceleration': np.array(self.acceleration_points)
+                'time': self.time_points,
+                'position': self.position_points,
+                'velocity': self.velocity_points,
+                'acceleration': self.acceleration_points
             }
         
         
@@ -53,10 +51,9 @@ class Simulation():
 
 
         # Calculating Forces
-
         drag_cart = -c.g*(0.005+0.001*v0)*self.vehicle.totalWeight()*(1+c.Cargo.carts)
         drag_air = -1/2*c.rho*v0*0.1*1
-        gravity = 9.81*self.vehicle.totalWeight()*(1+c.Cargo.carts)
+        gravity = -9.81*self.vehicle.totalWeight()
         thrust = torque_axel/(self.vehicle.wheel_radius/100)
         normal_front = self.vehicle.mass/1000*c.g*math.cos(deg)*(self.vehicle.length-self.vehicle.cog)/(self.vehicle.front_wheel*self.vehicle.length)
         normal_back = (self.vehicle.mass/1000*c.g*math.cos(deg)-self.vehicle.front_wheel*normal_front)/self.vehicle.back_wheel
@@ -65,7 +62,7 @@ class Simulation():
         # Slip
         actual_thrust = friction_s if (thrust > friction_s) else thrust
 
-        # take forward & up as positive
+        # Take forward & up as positive
         f_net = drag_cart + drag_air + actual_thrust
 
         a = f_net/self.vehicle.totalWeight()
@@ -75,7 +72,6 @@ class Simulation():
 
 
         # Update lists
-
         self.time_points.append(t)
         self.position_points.append(x)
         self.velocity_points.append(v)
@@ -98,5 +94,5 @@ class Simulation():
 
 # Start Simulation 
 sim = Simulation()    
-sim.start()
+print(sim.start())
 
