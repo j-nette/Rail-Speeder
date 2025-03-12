@@ -37,7 +37,10 @@ class Simulation():
         stage = [{'func': self.straight, "params": { "length": 10, "incline": 0 }}]
 
         for element in stage:
-            if self.isComplete == True: break
+            if self.isComplete == True: 
+                print(self.time_points[-1])
+                logging.error('Maximum Run Time Exceeded.')
+                break
             else:
                 element['func'](element['params'])
             
@@ -56,7 +59,7 @@ class Simulation():
     def step(self, x0, deg):
         if self.time_points[-1] > c.max_time*60:
             self.isComplete = True
-            return
+            return -1
             
         v0 = self.velocity_points[-1]
 
@@ -109,9 +112,13 @@ class Simulation():
         x = 0
         x0 = 0
 
-        while x < length:
+        while x < length and not self.isComplete:
             x = self.step(x0,deg)
             x0 = x
+
+            if x < 0:
+                logging.error('Simulation failed: x<0')
+                break
 
         self.checkpoint()
         return
