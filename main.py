@@ -13,11 +13,108 @@ sim = Simulation()
 
 DEFAULT_PARAMS = {
   'length': False,
+  'height': False,
   'incline': False,
   'curve_radius': False,
-  'radius': False,
   'angle': False,
 }
+
+sections = [
+  {
+    'id': 1,
+    'name': 'Start Gate',
+    'func': Simulation.checkpoint,
+    "tags": {}
+  },
+  {
+    'id': 2,
+    'name': 'Straight 1',
+    'func': Simulation.straight,
+    "tags": {
+      'length': True
+    },
+    'params': {
+      'incline': 0
+    }
+  },
+  {
+    'id': 3,
+    'name': 'Incline 1',
+    'func': Simulation.straight,
+    "tags": {
+      'length': True,
+      'inline': True
+    },
+    'params': {}
+  },
+  {
+    'id': 4,
+    'name': 'Curve 1',
+    'func': Simulation.curve,
+    "tags": {
+      'curve_radius': True,
+      'angle': True
+    },
+    'params': {}
+  },
+  {
+    'id': 5,
+    'name': 'Mid Gate',
+    'func': Simulation.checkpoint,
+    'params': {}
+  },
+  {
+    'id': 6,
+    'name': 'Curve 2',
+    'func': Simulation.curve,
+    "tags": {
+      'curve_radius': True,
+      'angle': True
+    },
+    'params': {}
+  },
+  {
+    'id': 7,
+    'name': 'Hill',
+    'func': Simulation.hill,
+    'tags': {
+      'length': True,
+      'height': True
+    },
+    'params': {}
+  },
+  {
+    'id': 8,
+    'name': 'Incline 2',
+    'func': Simulation.straight,
+    "tags": {
+      'length': True,
+      'inline': True
+    },
+    'params': {}
+  },
+  {
+    'id': 9,
+    'name': 'Straight 2',
+    'func': Simulation.straight,
+    "tags": {
+      'length': True
+    },
+    'params': {
+      'incline': 0
+    }
+  },
+  {
+    'id': 10,
+    'name': 'End Gate',
+    'func': Simulation.checkpoint,
+    'params': {}
+  },
+]
+# TODO: Add delete section button
+  # TODO: Update list name with length and angle to visualize current settings
+  # TODO: Update section parameters section when clicking on list item
+  # TODO: Make this a dict? and only show the value (i.e. convert the dict into list of values)
 
 class MainWindow(QWidget):
 
@@ -25,10 +122,6 @@ class MainWindow(QWidget):
   plotLines = dict()
   vehicle = dict()
   track = dict()
-  sectionTypes = ["Start Gate", "Straight 1", "Incline 1", "Mid Gate", "Curve", "Hill", "Incline 2", "Straight 2", "End Gate"]
-  # TODO: Update list name with length and angle to visualize current settings
-  # TODO: Update section parameters section when clicking on list item
-  # TODO: Make this a dict? and only show the value (i.e. convert the dict into list of values)
 
   def __init__(self):
     super(MainWindow, self).__init__(None)
@@ -68,15 +161,19 @@ class MainWindow(QWidget):
     self.paramsBox = QGroupBox("Vehicle Parameters")
     self.vehicleParams = QFormLayout()
     self.vehicle['mass'] = QLineEdit()
+    self.vehicle['mass'].setText("0.5")
     self.vehicleParams.addRow(self.tr("&Vehicle Mass [kg]:"), self.vehicle['mass'])
     self.vehicle['carts'] = QComboBox()
     self.vehicle['carts'].addItems(list(map(str, range(1,10))))
     self.vehicleParams.addRow(self.tr("&Carts [-]:"), self.vehicle['carts'])
     self.vehicle['cargo'] = QLineEdit()
+    self.vehicle['cargo'].setText("1")
     self.vehicleParams.addRow(self.tr("&Cargo Mass [kg]:"), self.vehicle['cargo'])
     self.vehicle['ratio'] = QLineEdit()
+    self.vehicle['ratio'].setText("20")
     self.vehicleParams.addRow(self.tr("&Reduction Gear Ratio [-]:"), self.vehicle['ratio'])
     self.vehicle['radius'] = QLineEdit()
+    self.vehicle['radius'].setText("5")
     self.vehicleParams.addRow(self.tr("&Wheel Radius [cm]:"), self.vehicle['radius'])
     self.vehicle['cog'] = QLineEdit()
     self.vehicle['cog'].setPlaceholderText("From front of vehicle")
@@ -89,6 +186,7 @@ class MainWindow(QWidget):
     self.vehicle['width'].setText("3")
     self.vehicleParams.addRow(self.tr("&Width [cm]:"), self.vehicle['width'])
     self.vehicle['eff'] = QLineEdit()
+    self.vehicle['eff'].setText("1")
     self.vehicleParams.addRow(self.tr("&Transmission Efficiency [-]:"), self.vehicle['eff'])
     self.vehicle['batteries'] = QComboBox()
     self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
@@ -105,8 +203,8 @@ class MainWindow(QWidget):
     self.sectionBox = QGroupBox("Track Layout")
     self.sections = QListWidget()
     self.sections.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-    for n in self.sectionTypes:
-      self.sections.addItem(QListWidgetItem(n))
+    for n in sections:
+      item = self.sections.addItem(QListWidgetItem(n['name']))
 
     #self.sectionBox.setLayout(self.sections)
     # TODO: make this a list
@@ -181,15 +279,15 @@ class MainWindow(QWidget):
       self.track['length'] = QLineEdit()
       self.track['length'].setPlaceholderText("Horizontal Length")
       params.addRow(self.tr("&Length [m]:"), self.track['length'])
+    if (p['height']):
+      self.track['height'] = QLineEdit()
+      params.addRow(self.tr("&height [m]:"), self.track['height'])
     if (p['incline']):
       self.track['incline'] = QLineEdit()
       params.addRow(self.tr("&Incline [deg]:"), self.track['incline'])
     if (p['curve_radius']):
       self.track['curve_radius'] = QLineEdit()
       params.addRow(self.tr("&Radius of Curvature [cm]:"), self.track['curve_radius'])
-    if (p['radius']):
-      self.track['radius'] = QLineEdit()
-      params.addRow(self.tr("&Radius [cm]:"), self.track['radius'])
     if (p['angle']):
       self.track['angle'] = QLineEdit()
       params.addRow(self.tr("&Curve Angle [deg]:"), self.track['angle'])
@@ -244,12 +342,23 @@ class MainWindow(QWidget):
   def simData(self, data):
     self.simButton.setText("Start Simulation")
     self.simButton.setEnabled(True)
-    
+
     self.updatePlot("velocity", data['time'], data['velocity'])
     self.updatePlot("position", data['time'], data['position'])
     self.updatePlot("accel", data['time'], data['acceleration'])
     self.updatePlot("power", data['time'], data['motorpower'])
 
+
+# sections = [
+#   {
+#     'func': Simulation.straight,
+#     "length": 1,
+#     "incline": 1
+#   },
+#   {
+
+#   }
+# ]
 
 
 class QTextEditLogger(logging.Handler):
