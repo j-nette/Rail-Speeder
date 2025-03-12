@@ -2,7 +2,7 @@ import math
 
 g = 9.81
 max_time = 1 # [min]
-dt = 0.01 # [s]
+dt = 0.01/10 # [s]
 rho = 1.2
 
 

@@ -17,10 +17,21 @@ class Simulation():
         self.motor_points = [0]
 
     def start(self, param): 
+
+        # Setup stuff
         global p
         p = param
 
+        self.time_points = [0]
+        self.position_points = [0]
+        self.velocity_points = [0]
+        self.acceleration_points = [0]
+        self.check_points = [0]
+        self.motor_points = [0]
+
         self.isComplete = False
+
+        # Start sim
 
         # testing purposes
         stage = [{'func': self.straight, "params": { "length": 10, "incline": 0 }}]
@@ -43,19 +54,23 @@ class Simulation():
         
 
     def step(self, x0, deg):
+        if self.time_points[-1] > c.max_time*60:
+            self.isComplete = True
+            return
+            
         v0 = self.velocity_points[-1]
 
         omega_wheel = v0 / ( p['radius'] / 100) 
         omega_motor = omega_wheel * p['ratio']
 
-        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor
+        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor #is this wrong
         torque_axel =p['ratio'] * torque_motor * p['t_eff']
         
-        # Calculating Forces
+        # Calculating tangential forces
+
         drag_cart = -c.g*(0.005+0.001*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
         drag_air = -1/2*c.rho*v0*0.1*1
 
-        gravity_n = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.cos(deg*math.pi/180)
         gravity_t = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
 
         thrust = torque_axel/(p['radius']/100)
@@ -67,21 +82,15 @@ class Simulation():
         # Check for slip
         actual_thrust = friction_s if (thrust > friction_s) else thrust
 
-        # take forward & up as positive
-        f_t = drag_cart + drag_air + actual_thrust
-        f_n = gravity_n + normal_back + normal_front
+        f_t = drag_cart + drag_air + actual_thrust + gravity_t
 
-        a_t= f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
-        a_n = f_n/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
-
-        a = math.sqrt(a_t**2+a_n**2)
-
+        a = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
         t = self.time_points[-1] + c.dt
         v = v0 + a*c.dt
         x = x0 + v0*c.dt+1/2*a*c.dt**2
 
         # Calculate motor power
-        power = torque_motor/c.Motor.torque_s*100
+        power = (torque_motor/c.Motor.torque_s)*100
 
         # Update lists
         self.time_points.append(t)
@@ -102,7 +111,6 @@ class Simulation():
 
         while x < length:
             x = self.step(x0,deg)
-            print(x)
             x0 = x
 
         self.checkpoint()
