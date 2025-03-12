@@ -13,8 +13,7 @@ class Simulation():
         self.velocity_points = [0]
         self.acceleration_points = [0]
 
-    def start(self, p):   
-        print(p)   
+    def start(self, p):  
         t = 0 
         isComplete = False
 

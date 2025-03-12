@@ -152,7 +152,7 @@ class MainWindow(QWidget):
       global vehicleParams 
       vehicleParams = {
         'v_mass': float(self.vehicle['mass'].text()),
-        'carts': float(self.vehicle['carts'].text()),
+        'carts': int(self.vehicle['carts'].currentText()),
         'c_mass': float(self.vehicle['cargo'].text()),
         'ratio': float(self.vehicle['ratio'].text()),
         'radius': float(self.vehicle['radius'].text()),
@@ -161,8 +161,8 @@ class MainWindow(QWidget):
         'width': float(self.vehicle['width'].text()),
         't_eff': float(self.vehicle['eff'].text()),
       }
-    except:
-      return
+    except Exception as e:
+      return print(e)
 
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
@@ -208,7 +208,5 @@ class SimulationWorker(QObject):
   finished = pyqtSignal(dict)
 
   def run(self):
-      # Here we pass the update_progress (uncalled!)
-      # function to the long_running_function:
       data = sim.start(vehicleParams)
       self.finished.emit(data)
