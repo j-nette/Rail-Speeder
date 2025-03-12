@@ -18,6 +18,9 @@ class MainWindow(QWidget):
   vehicle = dict()
   track = dict()
   sectionTypes = ["Start Gate", "Straight 1", "Incline 1", "Mid Gate", "Curve", "Hill", "Incline 2", "Straight 2", "End Gate"]
+  # TODO: Update list name with length and angle to visualize current settings
+  # TODO: Update section parameters section when clicking on list item
+  # TODO: Make this a dict? and only show the value (i.e. convert the dict into list of values)
 
   def __init__(self):
     super(MainWindow, self).__init__(None)
@@ -79,6 +82,9 @@ class MainWindow(QWidget):
     self.vehicleParams.addRow(self.tr("&Width [cm]:"), self.vehicle['width'])
     self.vehicle['eff'] = QLineEdit()
     self.vehicleParams.addRow(self.tr("&Transmission Efficiency [-]:"), self.vehicle['eff'])
+    self.vehicle['batteries'] = QComboBox()
+    self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
+    self.vehicleParams.addRow(self.tr("&Batteries [-]:"), self.vehicle['batteries'])
 
     self.paramsBox.setLayout(self.vehicleParams)
     # TODO: Look into using QStackedWidget for the graphs?
@@ -109,14 +115,31 @@ class MainWindow(QWidget):
 
 
     #Simulation
+    self.simBox = QGroupBox("Simulation")
+
     self.simButton = QPushButton("Start Simulation")
     self.simButton.clicked.connect(self.startSim)
 
-    self.buttonsBox = QGroupBox("Simulation")
-    self.buttons = QVBoxLayout()
-    self.buttons.addWidget(self.simButton)
-    self.buttonsBox.setLayout(self.buttons)
-    # TODO: Add start simulation button in this section
+    self.simOut = QFormLayout()
+    self.totalTime = QLabel("-")
+    self.simOut.addRow(self.tr("&Total Time [s]:"), self.totalTime)
+    self.velocity1 = QLabel("-")
+    self.simOut.addRow(self.tr("&Section 1 Velocity [m/s]:"), self.velocity1)
+    self.velocity2 = QLabel("-")
+    self.simOut.addRow(self.tr("&Section 2 Velocity [m/s]:"), self.velocity2)
+    self.gate1 = QLabel("-")
+    self.simOut.addRow(self.tr("&Start Gate [-]:"), self.gate1) # "-" || "Triggered"
+    self.gate2 = QLabel("-")
+    self.simOut.addRow(self.tr("&Mid Gate [-]:"), self.gate2)
+    self.gate3 = QLabel("-")
+    self.simOut.addRow(self.tr("&End Gate [-]:"), self.gate3)
+    self.simOut.addRow("", QLabel(""))
+    self.simOut.addRow("", QLabel(""))
+    self.simOut.addRow(self.simButton)
+
+    self.simBox = QGroupBox("Simulation")
+    self.simBox.setLayout(self.simOut)
+    # TODO: Add vertical colored lines to show gates, and sections
 
 
     #Add widgets to display
@@ -126,7 +149,7 @@ class MainWindow(QWidget):
     self.grid.addWidget(self.plots['power'], 2, 2)
     self.grid.addWidget(self.paramsBox, 1, 3)
     self.grid.addWidget(self.sections, 1, 4)
-    self.grid.addWidget(self.buttonsBox, 2, 3)
+    self.grid.addWidget(self.simBox, 2, 3)
     self.grid.addWidget(self.trackBox, 2, 4)
     self.grid.addWidget(self.loggingGroupBox, 3, 1, 1, 4)
 
@@ -160,6 +183,7 @@ class MainWindow(QWidget):
         'length': float(self.vehicle['length'].text()),
         'width': float(self.vehicle['width'].text()),
         't_eff': float(self.vehicle['eff'].text()),
+        'batteries': int(self.vehicle['batteries'].currentText())
       }
     except Exception as e:
       alert = QDialog()
