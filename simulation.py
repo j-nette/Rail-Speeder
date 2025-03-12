@@ -4,8 +4,6 @@ from structures import Vehicle
 import math
 import logging
 
-
-
 class Simulation():
     vehicle = Vehicle()
 
@@ -15,13 +13,12 @@ class Simulation():
         self.velocity_points = [0]
         self.acceleration_points = [0]
         self.check_points = [0]
+        self.motor_points = [0]
 
     def start(self, param): 
         global p
         p = param
 
-
-        t = 0 
         isComplete = False
 
         # track stuff?
@@ -40,11 +37,13 @@ class Simulation():
                 'position': self.position_points,
                 'velocity': self.velocity_points,
                 'acceleration': self.acceleration_points,
-                'checkpoints': self.check_points
+                'checkpoints': self.check_points,
+                'motorpower': self.motor_points
             }
         
 
     def step(self, x0, v0, deg):
+        
         omega_wheel = v0 / ( p['radius'] / 100) 
         omega_motor = omega_wheel * p['ratio']
 
@@ -71,11 +70,15 @@ class Simulation():
         v = v0 + a*c.dt
         x = x0 + v0*c.dt+1/2*a*c.dt**2
 
+        # Calculate motor power
+        power = torque_motor/c.Motor.torque_s*100
+
         # Update lists
         self.time_points.append(t)
         self.position_points.append(x)
         self.velocity_points.append(v)
         self.acceleration_points.append(a)
+        self.motor_points.append(power)
 
         return [x, v]
 
