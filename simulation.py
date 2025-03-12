@@ -34,7 +34,10 @@ class Simulation():
         # Start sim
 
         # testing purposes
-        stage = [{'func': self.straight, "params": { "length": 10, "incline": 0 }}]
+        stage = [{'func': self.straight, "params": { "length": 0.61, "incline": 0 }},
+                {'func': self.hill, "params": { "length": 0.91/math.tan(45*math.pi/180), "height": -0.91}},
+                {'func': self.curve, "params": { "angle": 180, "curve_radius": 0.61}},
+                {'func': self.straight, "params": { "length": 8.5, "incline": 0 }}]
 
         for element in stage:
             if self.isComplete == True: 
@@ -56,7 +59,7 @@ class Simulation():
         }
         
 
-    def step(self, x0, deg):
+    def step(self, x0, deg, isCurve = False):
         if self.time_points[-1] > c.max_time*60:
             self.isComplete = True
             return -1
@@ -66,12 +69,12 @@ class Simulation():
         omega_wheel = v0 / ( p['radius'] / 100) 
         omega_motor = omega_wheel * p['ratio']
 
-        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor #is this wrong
+        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor
         torque_axel =p['ratio'] * torque_motor * p['t_eff']
         
         # Calculating tangential forces
 
-        drag_cart = -c.g*(0.005+0.001*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
+        drag_cart = -c.g*(0.05+0.01*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
         drag_air = -1/2*c.rho*v0*0.1*1
 
         gravity_t = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
@@ -87,9 +90,15 @@ class Simulation():
 
         f_t = drag_cart + drag_air + actual_thrust + gravity_t
 
-        a = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
+        if isCurve:
+            a = v0**2/p['radius']*0.8
+            #a_tot = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*c.curve_eff
+            #a = math.sqrt(a_tot**2+a_n**2)
+        else:
+            a = (f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts']))
+
         t = self.time_points[-1] + c.dt
-        v = v0 + a*c.dt
+        v = v0 + a*c.dt/2 # multiplied by 0.5 because velocity seemed to be too fast by a factor of 2
         x = x0 + v0*c.dt+1/2*a*c.dt**2
 
         # Calculate motor power
@@ -145,14 +154,14 @@ class Simulation():
         return
     
     def curve(self, params): #check later, need centripetal accel
-        radius = params['radius']
-        deg = params['deg']
+        radius = params['curve_radius']
+        deg = params['angle']
 
         x = 0
         x0 = 0
 
         while x < deg*math.pi/180*radius:
-            x = self.step(x0)
+            x = self.step(x0, 0, True)
             x0 = x
         
         self.checkpoint()
@@ -162,6 +171,8 @@ class Simulation():
     def checkpoint(self, params = None): #note times of section ends & gates
         t = self.time_points[-1]
         self.check_points.append(t)
+
+        print(t)
         return 
 
 
