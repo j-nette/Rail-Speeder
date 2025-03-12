@@ -119,6 +119,7 @@ class MainWindow(QWidget):
 
     self.simButton = QPushButton("Start Simulation")
     self.simButton.clicked.connect(self.startSim)
+    # TODO: Change text to "Running...." and lock button
 
     self.simOut = QFormLayout()
     self.totalTime = QLabel("-")
@@ -236,11 +237,18 @@ class MainWindow(QWidget):
     self.simThread.finished.connect(self.simThread.deleteLater)
 
     self.simThread.start()
+
+    self.simButton.setText("Running Simulation...")
+    self.simButton.setEnabled(False)
   
   def simData(self, data):
+    self.simButton.setText("Start Simulation")
+    self.simButton.setEnabled(True)
+    
     self.updatePlot("velocity", data['time'], data['velocity'])
     self.updatePlot("position", data['time'], data['position'])
     self.updatePlot("accel", data['time'], data['acceleration'])
+    self.updatePlot("power", data['time'], data['motorpower'])
 
 
 
