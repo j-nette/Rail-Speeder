@@ -11,6 +11,14 @@ logging.basicConfig(level=logging.INFO)
 graphPen = pg.mkPen(color=(2, 135, 195), width=2)
 sim = Simulation()
 
+DEFAULT_PARAMS = {
+  'length': False,
+  'incline': False,
+  'curve_radius': False,
+  'radius': False,
+  'angle': False,
+}
+
 class MainWindow(QWidget):
 
   plots = dict()
@@ -85,21 +93,13 @@ class MainWindow(QWidget):
     self.vehicle['batteries'] = QComboBox()
     self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
     self.vehicleParams.addRow(self.tr("&Batteries [-]:"), self.vehicle['batteries'])
+    self.vehicle['cof'] = QLineEdit()
+    self.vehicle['cof'].setText("1")
+    self.vehicleParams.addRow(self.tr("&Coefficient of Friction [-]:"), self.vehicle['cof'])
 
     self.paramsBox.setLayout(self.vehicleParams)
     # TODO: Look into using QStackedWidget for the graphs?
 
-
-    #Track Parameters
-    self.trackBox = QGroupBox("Section Parameters")
-    self.trackParams = QFormLayout()
-    self.track['length'] = QLineEdit()
-    self.track['length'].setPlaceholderText("Horizontal Length")
-    self.trackParams.addRow(self.tr("&Length [cm]:"), self.track['length'])
-    self.track['incline'] = QLineEdit()
-    self.trackParams.addRow(self.tr("&Incline [deg]:"), self.track['incline'])
-
-    self.trackBox.setLayout(self.trackParams)
 
     #Sections
     self.sectionBox = QGroupBox("Track Layout")
@@ -140,6 +140,7 @@ class MainWindow(QWidget):
     self.simBox = QGroupBox("Simulation")
     self.simBox.setLayout(self.simOut)
     # TODO: Add vertical colored lines to show gates, and sections
+    # TODO: arclength and radius for curve
 
 
     #Add widgets to display
@@ -150,7 +151,7 @@ class MainWindow(QWidget):
     self.grid.addWidget(self.paramsBox, 1, 3)
     self.grid.addWidget(self.sections, 1, 4)
     self.grid.addWidget(self.simBox, 2, 3)
-    self.grid.addWidget(self.trackBox, 2, 4)
+    self.grid.addWidget(self.generateSectionParams(), 2, 4)
     self.grid.addWidget(self.loggingGroupBox, 3, 1, 1, 4)
 
     self.setLayout(self.grid)
@@ -168,8 +169,34 @@ class MainWindow(QWidget):
     return plot
   
   def updatePlot(self, name, x, y):
-    self.plotLines[name].setData(x, y)
-  
+    self.plotLines[name].setData(x[1:], y[1:])
+
+  def generateSectionParams(self, params: dict = {}):
+    p = DEFAULT_PARAMS | params
+
+    box = QGroupBox("Section Parameters")
+    params = QFormLayout()
+    if (p['length']):
+      self.track['length'] = QLineEdit()
+      self.track['length'].setPlaceholderText("Horizontal Length")
+      params.addRow(self.tr("&Length [m]:"), self.track['length'])
+    if (p['incline']):
+      self.track['incline'] = QLineEdit()
+      params.addRow(self.tr("&Incline [deg]:"), self.track['incline'])
+    if (p['curve_radius']):
+      self.track['curve_radius'] = QLineEdit()
+      params.addRow(self.tr("&Radius of Curvature [cm]:"), self.track['curve_radius'])
+    if (p['radius']):
+      self.track['radius'] = QLineEdit()
+      params.addRow(self.tr("&Radius [cm]:"), self.track['radius'])
+    if (p['angle']):
+      self.track['angle'] = QLineEdit()
+      params.addRow(self.tr("&Curve Angle [deg]:"), self.track['angle'])
+
+    box.setLayout(params)
+
+    return box
+
   def startSim(self):
     try:
       global vehicleParams 
@@ -183,7 +210,8 @@ class MainWindow(QWidget):
         'length': float(self.vehicle['length'].text()),
         'width': float(self.vehicle['width'].text()),
         't_eff': float(self.vehicle['eff'].text()),
-        'batteries': int(self.vehicle['batteries'].currentText())
+        'batteries': int(self.vehicle['batteries'].currentText()),
+        'cof': float(self.vehicle['cof'].currentText())
       }
     except Exception as e:
       alert = QDialog()
