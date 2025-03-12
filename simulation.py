@@ -58,7 +58,7 @@ class Simulation():
         thrust = torque_axel/(p['radius']/100)
         normal_front = p['v_mass']*c.g*math.cos(deg*math.pi/180)*(p['length'] - p['cog'])/(self.vehicle.front_wheel*p['length'])
         normal_back = (p['v_mass']*c.g*math.cos(deg*math.pi/180)-self.vehicle.front_wheel*normal_front)/self.vehicle.back_wheel
-        friction_s = normal_back*self.vehicle.cof*self.vehicle.back_wheel
+        friction_s = normal_back*p['cof']*self.vehicle.back_wheel
 
         # Slip
         actual_thrust = friction_s if (thrust > friction_s) else thrust
