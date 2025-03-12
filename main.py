@@ -17,7 +17,7 @@ class MainWindow(QWidget):
   plotLines = dict()
   vehicle = dict()
   track = dict()
-  sectionTypes = ["Straight1", "Incline1", "Curve", "Hill", "Incline2", "Straight2"]
+  sectionTypes = ["Start Gate", "Straight 1", "Incline 1", "Mid Gate", "Curve", "Hill", "Incline 2", "Straight 2", "End Gate"]
 
   def __init__(self):
     super(MainWindow, self).__init__(None)
@@ -162,7 +162,16 @@ class MainWindow(QWidget):
         't_eff': float(self.vehicle['eff'].text()),
       }
     except Exception as e:
-      return print(e)
+      alert = QDialog()
+      alert.setWindowTitle("Error")
+      msg = QLabel("Please fill in all vehicle parameters before starting the simulation.")
+      btn = QDialogButtonBox(QDialogButtonBox.Ok)
+      btn.accepted.connect(alert.close)
+      layout = QVBoxLayout()
+      layout.addWidget(msg)
+      layout.addWidget(btn)
+      alert.setLayout(layout)
+      return alert.exec()
 
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
@@ -195,14 +204,12 @@ class QTextEditLogger(logging.Handler):
 
 
 class DragButton(QPushButton):
-
-    def mouseMoveEvent(self, e):
-
-        if e.buttons() == Qt.LeftButton:
-            drag = QDrag(self)
-            mime = QMimeData()
-            drag.setMimeData(mime)
-            drag.exec_(Qt.MoveAction)
+  def mouseMoveEvent(self, e):
+    if e.buttons() == Qt.LeftButton:
+      drag = QDrag(self)
+      mime = QMimeData()
+      drag.setMimeData(mime)
+      drag.exec_(Qt.MoveAction)
 
 class SimulationWorker(QObject):
   finished = pyqtSignal(dict)

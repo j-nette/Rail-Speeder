@@ -2,6 +2,7 @@ import constants as c
 from structures import Vehicle
 
 import math
+import logging
 
 
 class Simulation():
@@ -26,7 +27,7 @@ class Simulation():
         #
 
         if isComplete is True:
-            print('Simulation Complete')
+            logging.info('Simulation Complete')
 
             return {
                 'time': self.time_points,
