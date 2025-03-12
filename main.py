@@ -211,7 +211,7 @@ class MainWindow(QWidget):
         'width': float(self.vehicle['width'].text()),
         't_eff': float(self.vehicle['eff'].text()),
         'batteries': int(self.vehicle['batteries'].currentText()),
-        'cof': float(self.vehicle['cof'].currentText())
+        'cof': float(self.vehicle['cof'].text())
       }
     except Exception as e:
       alert = QDialog()
