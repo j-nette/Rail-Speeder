@@ -7,8 +7,8 @@ rho = 1.2
 
 
 class Cargo:
-    carts = 4 # number of carts
-    mass = 100 # [g]
+    cart_mass = 0.5 # [kg]
+
 
 class Motor:
     speed_nl = 10679
