@@ -19,12 +19,17 @@ DEFAULT_PARAMS = {
   'angle': False,
 }
 
+DEFAULT_VALS = {
+  'title': "",
+}
+
 sections = [
   {
     'id': 1,
     'name': 'Start Gate',
     'func': Simulation.checkpoint,
-    "tags": {}
+    "tags": {},
+    "params": {}
   },
   {
     'id': 2,
@@ -43,7 +48,7 @@ sections = [
     'func': Simulation.straight,
     "tags": {
       'length': True,
-      'inline': True
+      'incline': True
     },
     'params': {}
   },
@@ -61,7 +66,8 @@ sections = [
     'id': 5,
     'name': 'Mid Gate',
     'func': Simulation.checkpoint,
-    'params': {}
+    "tags": {},
+    "params": {}
   },
   {
     'id': 6,
@@ -89,7 +95,7 @@ sections = [
     'func': Simulation.straight,
     "tags": {
       'length': True,
-      'inline': True
+      'incline': True
     },
     'params': {}
   },
@@ -108,7 +114,8 @@ sections = [
     'id': 10,
     'name': 'End Gate',
     'func': Simulation.checkpoint,
-    'params': {}
+    "tags": {},
+    "params": {}
   },
 ]
 # TODO: Add delete section button
@@ -205,6 +212,9 @@ class MainWindow(QWidget):
     self.sections.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
     for n in sections:
       item = self.sections.addItem(QListWidgetItem(n['name']))
+    
+    self.sections.model().rowsMoved.connect(self.onDragDrop)
+    self.sections.currentItemChanged.connect(self.onSectionChange)
 
     #self.sectionBox.setLayout(self.sections)
     # TODO: make this a list
@@ -270,31 +280,47 @@ class MainWindow(QWidget):
   def updatePlot(self, name, x, y):
     self.plotLines[name].setData(x[1:], y[1:])
 
-  def generateSectionParams(self, params: dict = {}):
-    p = DEFAULT_PARAMS | params
+  def generateSectionParams(self, tags: dict = {}, obj: dict = { 'name': '', 'params': {} }):
+    p = DEFAULT_PARAMS | tags
+    v = DEFAULT_VALS | obj['params']
 
-    box = QGroupBox("Section Parameters")
+    self.sectionBox = QGroupBox("Section Parameters")
     params = QFormLayout()
+    title = QLabel("<b>"+obj['name']+"</b>")
+    title.setAlignment(Qt.AlignCenter)
+    params.addRow(title)
     if (p['length']):
       self.track['length'] = QLineEdit()
       self.track['length'].setPlaceholderText("Horizontal Length")
       params.addRow(self.tr("&Length [m]:"), self.track['length'])
     if (p['height']):
       self.track['height'] = QLineEdit()
-      params.addRow(self.tr("&height [m]:"), self.track['height'])
+      params.addRow(self.tr("&Height [m]:"), self.track['height'])
     if (p['incline']):
       self.track['incline'] = QLineEdit()
       params.addRow(self.tr("&Incline [deg]:"), self.track['incline'])
     if (p['curve_radius']):
       self.track['curve_radius'] = QLineEdit()
-      params.addRow(self.tr("&Radius of Curvature [cm]:"), self.track['curve_radius'])
+      params.addRow(self.tr("&Curve Radius [cm]:"), self.track['curve_radius'])
     if (p['angle']):
       self.track['angle'] = QLineEdit()
-      params.addRow(self.tr("&Curve Angle [deg]:"), self.track['angle'])
+      params.addRow(self.tr("&Sweep Angle [deg]:"), self.track['angle'])
 
-    box.setLayout(params)
+    self.sectionBox.setLayout(params)
 
-    return box
+    return self.sectionBox
+  
+  def onDragDrop(self, start, end, dest, row):
+    return
+  
+  def onSectionChange(self):
+    self.grid.removeWidget(self.sectionBox)
+    self.sectionBox.deleteLater()
+    del self.sectionBox
+    obj = sections[self.sections.currentIndex().row()]
+    self.grid.addWidget(self.generateSectionParams(obj['tags'], obj), 2, 4)
+
+    return
 
   def startSim(self):
     try:
