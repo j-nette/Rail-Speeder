@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import pyqtgraph as pg
+import numpy as np
 
 import logging
 from simulation import Simulation
@@ -37,7 +38,7 @@ sections = [
   },
   {
     'id': 2,
-    'name': 'Straight 1',
+    'name': 'Straight',
     'func': sim.straight,
     "tags": {
       'length': True
@@ -48,7 +49,7 @@ sections = [
   },
   {
     'id': 3,
-    'name': 'Incline 1',
+    'name': 'Incline',
     'func': sim.straight,
     "tags": {
       'length': True,
@@ -58,7 +59,7 @@ sections = [
   },
   {
     'id': 4,
-    'name': 'Curve 1',
+    'name': 'Curve',
     'func': sim.curve,
     "tags": {
       'curve_radius': True,
@@ -75,7 +76,7 @@ sections = [
   },
   {
     'id': 6,
-    'name': 'Curve 2',
+    'name': 'Curve',
     'func': sim.curve,
     "tags": {
       'curve_radius': True,
@@ -95,7 +96,7 @@ sections = [
   # },
   # {
   #   'id': 8,
-  #   'name': 'Incline 2',
+  #   'name': 'Incline',
   #   'func': sim.straight,
   #   "tags": {
   #     'length': True,
@@ -105,7 +106,7 @@ sections = [
   # },
   {
     'id': 9,
-    'name': 'Straight 2',
+    'name': 'Straight',
     'func': sim.straight,
     "tags": {
       'length': True
@@ -122,12 +123,12 @@ sections = [
     "params": {}
   },
 ]
-# TODO: Add delete section button
 
 class MainWindow(QWidget):
 
   plots = dict()
   plotLines = dict()
+  checkpoints = dict()
   vehicle = dict()
   track = dict()
 
@@ -312,14 +313,32 @@ class MainWindow(QWidget):
     params.addRow("", QLabel(""))
     params.addRow("", QLabel(""))
 
-    # self.delButton = QPushButton("Delete Section")
-    # self.simButton.clicked.connect(self.startSim)
+    if (obj['name'] != '' and not 'Gate' in obj['name']):
+      self.delButton = QPushButton("Delete Section")
+      self.delButton.clicked.connect(self.delSection)
+      params.addRow(self.delButton)
 
     self.sectionBox.setLayout(params)
 
     return self.sectionBox
   
-  def onDragDrop(self, start, end, dest, row):
+  def onDragDrop(self, start: QModelIndex, end, dest, row: QModelIndex):
+    global sections
+
+    n = self.sections.currentRow()
+    shift = 1 if end > n else -1
+    front = min(n, end)
+    last = max(n, end)
+
+    temp = sections[:front]
+    shifted = np.roll(sections[front:last + 1], shift)
+    back = sections[(last + 1):]
+    for item in shifted:
+      temp.append(item)
+    for item in back:
+      temp.append(item)
+
+    sections = temp
     return
   
   def onSectionChange(self):
@@ -340,6 +359,12 @@ class MainWindow(QWidget):
       t += ", " + str(sections[n]['params'][i]) + UNITS[i]
 
     self.sections.selectedItems()[0].setText(t)
+
+  def delSection(self):
+    n = self.sections.currentRow()
+    self.sections.takeItem(n)
+    del sections[n]
+
 
   def startSim(self):
     valid = True
@@ -407,8 +432,23 @@ class MainWindow(QWidget):
     self.updatePlot("accel", data['time'], data['acceleration'])
     self.updatePlot("power", data['time'], data['motorpower'])
 
+    self.plotCheckpoints(data['checkpoints'])
+
     self.totalTime.clear()
     self.totalTime.setText(str(round(data['time'][-1],4)))
+  
+  def plotCheckpoints(self, data):
+    for graph in self.plots:
+      if graph in self.checkpoints:
+        for plot in self.checkpoints:
+          #! Double check plot is the indicies here
+          self.checkpoints[graph][plot].clear()
+
+      self.checkpoints[graph] = {}
+
+      for i in range(0,len(data)):
+        self.checkpoints[graph][i] = pg.InfiniteLine(data[i])
+        self.plots[graph].addItem(self.checkpoints[graph][i])
 
 
 class QTextEditLogger(logging.Handler):
