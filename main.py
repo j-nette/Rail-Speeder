@@ -139,7 +139,6 @@ class MainWindow(QWidget):
 
   plots = dict()
   plotLines = dict()
-  checkpoints = dict()
   vehicle = dict()
   track = dict()
 
@@ -282,9 +281,6 @@ class MainWindow(QWidget):
     self.plots[plotname] = plot
 
     return plot
-  
-  def updatePlot(self, name, x, y):
-    self.plotLines[name].setData(x[1:], y[1:])
 
   def generateSectionParams(self, tags: dict = {}, obj: dict = { 'name': '', 'params': {} }):
     p = DEFAULT_PARAMS | tags
@@ -450,16 +446,24 @@ class MainWindow(QWidget):
   
   def plotCheckpoints(self, data):
     for graph in self.plots:
-      if graph in self.checkpoints:
-        for plot in self.checkpoints:
-          #! Double check plot is the indicies here
-          self.checkpoints[graph][plot].clear()
-
-      self.checkpoints[graph] = {}
-
       for i in range(0,len(data)):
-        self.checkpoints[graph][i] = pg.InfiniteLine(data[i])
-        self.plots[graph].addItem(self.checkpoints[graph][i])
+        self.plots[graph].addItem(pg.InfiniteLine(data[i]))
+
+      # if graph in self.checkpoints:
+      #   for i in range(0,len(self.checkpoints)):
+      #     #! Double check plot is the indicies here
+      #     self.checkpoints[graph][i].setValue(data[i])
+      #     # Different color for gates
+      # else:
+      #   self.checkpoints[graph] = {}
+
+      #   for i in range(0,len(data)):
+      #     self.checkpoints[graph][i] = pg.InfiniteLine(data[i])
+      #     self.plots[graph].addItem(self.checkpoints[graph][i])
+
+  def updatePlot(self, name, x, y):
+    self.plots[name].clear()
+    self.plotLines[name] = self.plots[name].plot(x[1:], y[1:], pen=graphPen)
 
 
 class QTextEditLogger(logging.Handler):
