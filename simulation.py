@@ -76,8 +76,8 @@ class Simulation():
         
         # Calculating tangential forces
 
-        drag_cart = -c.g*(0.05+0.01*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
-        drag_air = -1/2*c.rho*v0*0.1*1
+        drag_cart = -c.g*(0.0052+0.75*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
+        drag_air = -1/2*c.rho*v0**2*0.1*1
 
         gravity_t = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
 
@@ -89,7 +89,7 @@ class Simulation():
 
         # Check for slip
         actual_thrust = friction_s if (thrust > friction_s) else thrust
-        
+
         # if (thrust > friction_s): 
         #     actual_thrust = thrust 
         # else:
@@ -97,7 +97,7 @@ class Simulation():
         #     print('Slipped') 
             
 
-        f_t = drag_cart + drag_air + actual_thrust + gravity_t
+        f_t = drag_cart + drag_air + actual_thrust + gravity_t 
 
         # TODO: CURVE NEEDS TO BE FIXED, assuming very small tangential acceleration
 
