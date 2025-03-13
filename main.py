@@ -23,7 +23,7 @@ UNITS = {
   'length': 'm',
   'height': 'm',
   'incline': 'deg',
-  'curve_radius': 'cm',
+  'curve_radius': 'm',
   'angle': 'deg',
 }
 
@@ -83,26 +83,26 @@ sections = [
     },
     'params': {}
   },
-  {
-    'id': 7,
-    'name': 'Hill',
-    'func': sim.hill,
-    'tags': {
-      'length': True,
-      'height': True
-    },
-    'params': {}
-  },
-  {
-    'id': 8,
-    'name': 'Incline 2',
-    'func': sim.straight,
-    "tags": {
-      'length': True,
-      'incline': True
-    },
-    'params': {}
-  },
+  # {
+  #   'id': 7,
+  #   'name': 'Hill',
+  #   'func': sim.hill,
+  #   'tags': {
+  #     'length': True,
+  #     'height': True
+  #   },
+  #   'params': {}
+  # },
+  # {
+  #   'id': 8,
+  #   'name': 'Incline 2',
+  #   'func': sim.straight,
+  #   "tags": {
+  #     'length': True,
+  #     'incline': True
+  #   },
+  #   'params': {}
+  # },
   {
     'id': 9,
     'name': 'Straight 2',
@@ -303,7 +303,7 @@ class MainWindow(QWidget):
       self.track['curve_radius'] = QLineEdit()
       self.track['curve_radius'].textEdited.connect(lambda text : self.sectionUpdate(text, 'curve_radius'))
       if ('curve_radius' in v): self.track['curve_radius'].setText(str(v['curve_radius'])) 
-      params.addRow(self.tr("&Curve Radius [cm]:"), self.track['curve_radius'])
+      params.addRow(self.tr("&Curve Radius [m]:"), self.track['curve_radius'])
     if (p['angle']):
       self.track['angle'] = QLineEdit()
       self.track['angle'].textEdited.connect(lambda text : self.sectionUpdate(text, 'angle'))
