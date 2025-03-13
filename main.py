@@ -19,6 +19,14 @@ DEFAULT_PARAMS = {
   'angle': False,
 }
 
+UNITS = {
+  'length': 'm',
+  'height': 'm',
+  'incline': 'deg',
+  'curve_radius': 'cm',
+  'angle': 'deg',
+}
+
 sections = [
   {
     'id': 1,
@@ -115,9 +123,6 @@ sections = [
   },
 ]
 # TODO: Add delete section button
-  # TODO: Update list name with length and angle to visualize current settings
-  # TODO: Update section parameters section when clicking on list item
-  # TODO: Make this a dict? and only show the value (i.e. convert the dict into list of values)
 
 class MainWindow(QWidget):
 
@@ -167,7 +172,7 @@ class MainWindow(QWidget):
     self.vehicle['mass'].setText("0.5")
     self.vehicleParams.addRow(self.tr("&Vehicle Mass [kg]:"), self.vehicle['mass'])
     self.vehicle['carts'] = QComboBox()
-    self.vehicle['carts'].addItems(list(map(str, range(1,10))))
+    self.vehicle['carts'].addItems(list(map(str, range(0,10))))
     self.vehicleParams.addRow(self.tr("&Carts [-]:"), self.vehicle['carts'])
     self.vehicle['cargo'] = QLineEdit()
     self.vehicle['cargo'].setText("1")
@@ -212,18 +217,12 @@ class MainWindow(QWidget):
     self.sections.model().rowsMoved.connect(self.onDragDrop)
     self.sections.currentItemChanged.connect(self.onSectionChange)
 
-    #self.sectionBox.setLayout(self.sections)
-    # TODO: make this a list
-    # https://stackoverflow.com/questions/12877534/python-qt-qlistwidget-items-drag-and-drop/12880300#12880300
-
-
 
     #Simulation
     self.simBox = QGroupBox("Simulation")
 
     self.simButton = QPushButton("Start Simulation")
     self.simButton.clicked.connect(self.startSim)
-    # TODO: Change text to "Running...." and lock button
 
     self.simOut = QFormLayout()
     self.totalTime = QLabel("-")
@@ -245,7 +244,6 @@ class MainWindow(QWidget):
     self.simBox = QGroupBox("Simulation")
     self.simBox.setLayout(self.simOut)
     # TODO: Add vertical colored lines to show gates, and sections
-    # TODO: arclength and radius for curve
 
 
     #Add widgets to display
@@ -334,7 +332,14 @@ class MainWindow(QWidget):
     return
   
   def sectionUpdate(self, text, p):
-    sections[self.sections.currentIndex().row()]['params'][p] = float(text)
+    n = self.sections.currentRow()
+    sections[n]['params'][p] = float(text)
+
+    t = sections[n]['name']
+    for i in sections[n]['params']:
+      t += ", " + str(sections[n]['params'][i]) + UNITS[i]
+
+    self.sections.selectedItems()[0].setText(t)
 
   def startSim(self):
     valid = True
@@ -404,18 +409,6 @@ class MainWindow(QWidget):
 
     self.totalTime.clear()
     self.totalTime.setText(str(round(data['time'][-1],4)))
-
-
-# sections = [
-#   {
-#     'func': Simulation.straight,
-#     "length": 1,
-#     "incline": 1
-#   },
-#   {
-
-#   }
-# ]
 
 
 class QTextEditLogger(logging.Handler):
