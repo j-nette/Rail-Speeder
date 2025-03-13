@@ -44,7 +44,8 @@ sections = [
       'length': True
     },
     'params': {
-      'incline': 0
+      'incline': 0,
+      'length': 0.61
     }
   },
   {
@@ -55,7 +56,10 @@ sections = [
       'length': True,
       'incline': True
     },
-    'params': {}
+    'params': {
+      'incline': -45,
+      'length': 0.91
+    }
   },
   {
     'id': 4,
@@ -65,7 +69,10 @@ sections = [
       'curve_radius': True,
       'angle': True
     },
-    'params': {}
+    'params': {
+      'curve_radius': 0.61,
+      'angle': 90
+    }
   },
   {
     'id': 5,
@@ -82,7 +89,10 @@ sections = [
       'curve_radius': True,
       'angle': True
     },
-    'params': {}
+    'params': {
+      'curve_radius': 0.61,
+      'angle': 90
+    }
   },
   # {
   #   'id': 7,
@@ -112,7 +122,8 @@ sections = [
       'length': True
     },
     'params': {
-      'incline': 0
+      'incline': 0,
+      'length': 8.5
     }
   },
   {
