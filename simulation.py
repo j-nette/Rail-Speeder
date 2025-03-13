@@ -71,7 +71,7 @@ class Simulation():
         omega_wheel = v0 / ( p['radius'] / 100) 
         omega_motor = omega_wheel * p['ratio']
 
-        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor
+        torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)*c.Motor.efficiency
         torque_axel =p['ratio'] * torque_motor * p['t_eff']
         
         # Calculating tangential forces
@@ -89,11 +89,21 @@ class Simulation():
 
         # Check for slip
         actual_thrust = friction_s if (thrust > friction_s) else thrust
+        
+        # if (thrust > friction_s): 
+        #     actual_thrust = thrust 
+        # else:
+        #     actual_thrust = friction_s
+        #     print('Slipped') 
+            
 
         f_t = drag_cart + drag_air + actual_thrust + gravity_t
 
+        # TODO: CURVE NEEDS TO BE FIXED, assuming very small tangential acceleration
+
         if isCurve:
-            a = v0**2/p['radius']*0.8
+            a = 0
+            #a = v0**2/p['radius']*0.8
             #a_tot = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*c.curve_eff
             #a = math.sqrt(a_tot**2+a_n**2)
         else:
@@ -137,17 +147,20 @@ class Simulation():
     def hill(self, params): #assuming no radius at top or bottom
         height = params['height']
         length = params['length']
+        deg = math.atan(height/(length/2))
+
+        length_slope = length/math.cos(deg*math.pi/180)
 
         x = 0
         x0 = 0
 
-        deg = math.atan(height/(length/2))
+        
 
-        while x < length/2:
+        while x < length_slope/2:
             x = self.step(x0,deg)
             x0 = x
         
-        while x < length:
+        while x < length_slope:
             x= self.step(x0,-deg)
             x0 = x
         

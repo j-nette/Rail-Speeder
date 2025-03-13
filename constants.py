@@ -17,6 +17,7 @@ class Motor:
     speed_nl = 10679
     torque_s = 0.01729
     k = torque_s/(speed_nl/60*2*math.pi)
+    efficiency = 0.43
     
 
 
