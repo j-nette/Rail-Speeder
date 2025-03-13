@@ -19,22 +19,18 @@ DEFAULT_PARAMS = {
   'angle': False,
 }
 
-DEFAULT_VALS = {
-  'title': "",
-}
-
 sections = [
   {
     'id': 1,
     'name': 'Start Gate',
-    'func': Simulation.checkpoint,
+    'func': sim.checkpoint,
     "tags": {},
     "params": {}
   },
   {
     'id': 2,
     'name': 'Straight 1',
-    'func': Simulation.straight,
+    'func': sim.straight,
     "tags": {
       'length': True
     },
@@ -45,7 +41,7 @@ sections = [
   {
     'id': 3,
     'name': 'Incline 1',
-    'func': Simulation.straight,
+    'func': sim.straight,
     "tags": {
       'length': True,
       'incline': True
@@ -55,7 +51,7 @@ sections = [
   {
     'id': 4,
     'name': 'Curve 1',
-    'func': Simulation.curve,
+    'func': sim.curve,
     "tags": {
       'curve_radius': True,
       'angle': True
@@ -65,14 +61,14 @@ sections = [
   {
     'id': 5,
     'name': 'Mid Gate',
-    'func': Simulation.checkpoint,
+    'func': sim.checkpoint,
     "tags": {},
     "params": {}
   },
   {
     'id': 6,
     'name': 'Curve 2',
-    'func': Simulation.curve,
+    'func': sim.curve,
     "tags": {
       'curve_radius': True,
       'angle': True
@@ -82,7 +78,7 @@ sections = [
   {
     'id': 7,
     'name': 'Hill',
-    'func': Simulation.hill,
+    'func': sim.hill,
     'tags': {
       'length': True,
       'height': True
@@ -92,7 +88,7 @@ sections = [
   {
     'id': 8,
     'name': 'Incline 2',
-    'func': Simulation.straight,
+    'func': sim.straight,
     "tags": {
       'length': True,
       'incline': True
@@ -102,7 +98,7 @@ sections = [
   {
     'id': 9,
     'name': 'Straight 2',
-    'func': Simulation.straight,
+    'func': sim.straight,
     "tags": {
       'length': True
     },
@@ -113,7 +109,7 @@ sections = [
   {
     'id': 10,
     'name': 'End Gate',
-    'func': Simulation.checkpoint,
+    'func': sim.checkpoint,
     "tags": {},
     "params": {}
   },
@@ -282,7 +278,7 @@ class MainWindow(QWidget):
 
   def generateSectionParams(self, tags: dict = {}, obj: dict = { 'name': '', 'params': {} }):
     p = DEFAULT_PARAMS | tags
-    v = DEFAULT_VALS | obj['params']
+    v = obj['params']
 
     self.sectionBox = QGroupBox("Section Parameters")
     params = QFormLayout()
@@ -292,19 +288,34 @@ class MainWindow(QWidget):
     if (p['length']):
       self.track['length'] = QLineEdit()
       self.track['length'].setPlaceholderText("Horizontal Length")
+      self.track['length'].textEdited.connect(lambda text : self.sectionUpdate(text, 'length'))
+      if ('length' in v): self.track['length'].setText(str(v['length'])) 
       params.addRow(self.tr("&Length [m]:"), self.track['length'])
     if (p['height']):
       self.track['height'] = QLineEdit()
+      self.track['height'].textEdited.connect(lambda text : self.sectionUpdate(text, 'height'))
+      if ('height' in v): self.track['height'].setText(str(v['height'])) 
       params.addRow(self.tr("&Height [m]:"), self.track['height'])
     if (p['incline']):
       self.track['incline'] = QLineEdit()
+      self.track['incline'].textEdited.connect(lambda text : self.sectionUpdate(text, 'incline'))
+      if ('incline' in v): self.track['incline'].setText(str(v['incline'])) 
       params.addRow(self.tr("&Incline [deg]:"), self.track['incline'])
     if (p['curve_radius']):
       self.track['curve_radius'] = QLineEdit()
+      self.track['curve_radius'].textEdited.connect(lambda text : self.sectionUpdate(text, 'curve_radius'))
+      if ('curve_radius' in v): self.track['curve_radius'].setText(str(v['curve_radius'])) 
       params.addRow(self.tr("&Curve Radius [cm]:"), self.track['curve_radius'])
     if (p['angle']):
       self.track['angle'] = QLineEdit()
+      self.track['angle'].textEdited.connect(lambda text : self.sectionUpdate(text, 'angle'))
+      if ('angle' in v): self.track['angle'].setText(str(v['angle'])) 
       params.addRow(self.tr("&Sweep Angle [deg]:"), self.track['angle'])
+    params.addRow("", QLabel(""))
+    params.addRow("", QLabel(""))
+
+    # self.delButton = QPushButton("Delete Section")
+    # self.simButton.clicked.connect(self.startSim)
 
     self.sectionBox.setLayout(params)
 
@@ -321,8 +332,22 @@ class MainWindow(QWidget):
     self.grid.addWidget(self.generateSectionParams(obj['tags'], obj), 2, 4)
 
     return
+  
+  def sectionUpdate(self, text, p):
+    sections[self.sections.currentIndex().row()]['params'][p] = float(text)
 
   def startSim(self):
+    valid = True
+    for i in sections:
+      if (not valid): break
+      for j in i['tags']:
+        if (not j in i['params']):
+          valid = False
+          break
+
+    if (not valid):
+      return self.alertMissingParams("Please fill in all track parameters before starting the simulation.")
+
     try:
       global vehicleParams 
       vehicleParams = {
@@ -339,16 +364,7 @@ class MainWindow(QWidget):
         'cof': float(self.vehicle['cof'].text())
       }
     except Exception as e:
-      alert = QDialog()
-      alert.setWindowTitle("Error")
-      msg = QLabel("Please fill in all vehicle parameters before starting the simulation.")
-      btn = QDialogButtonBox(QDialogButtonBox.Ok)
-      btn.accepted.connect(alert.close)
-      layout = QVBoxLayout()
-      layout.addWidget(msg)
-      layout.addWidget(btn)
-      alert.setLayout(layout)
-      return alert.exec()
+      return self.alertMissingParams("Please fill in all vehicle parameters before starting the simulation.")
 
     self.simThread = QThread()
     self.simWorker = SimulationWorker()
@@ -364,6 +380,18 @@ class MainWindow(QWidget):
 
     self.simButton.setText("Running Simulation...")
     self.simButton.setEnabled(False)
+
+  def alertMissingParams(self, text):
+      alert = QDialog()
+      alert.setWindowTitle("Error")
+      msg = QLabel(text)
+      btn = QDialogButtonBox(QDialogButtonBox.Ok)
+      btn.accepted.connect(alert.close)
+      layout = QVBoxLayout()
+      layout.addWidget(msg)
+      layout.addWidget(btn)
+      alert.setLayout(layout)
+      return alert.exec()
   
   def simData(self, data):
     self.simButton.setText("Start Simulation")
@@ -373,6 +401,9 @@ class MainWindow(QWidget):
     self.updatePlot("position", data['time'], data['position'])
     self.updatePlot("accel", data['time'], data['acceleration'])
     self.updatePlot("power", data['time'], data['motorpower'])
+
+    self.totalTime.clear()
+    self.totalTime.setText(str(round(data['time'][-1],4)))
 
 
 # sections = [
@@ -410,5 +441,5 @@ class SimulationWorker(QObject):
   finished = pyqtSignal(dict)
 
   def run(self):
-      data = sim.start(vehicleParams)
+      data = sim.start(vehicleParams, sections)
       self.finished.emit(data)

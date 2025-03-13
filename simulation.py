@@ -8,15 +8,17 @@ class Simulation():
     isComplete = False
     vehicle = Vehicle()
 
-    def __init__(self):
-        self.time_points = [0]
-        self.position_points = [0]
-        self.velocity_points = [0]
-        self.acceleration_points = [0]
-        self.check_points = [0]
-        self.motor_points = [0]
+    time_points = [0]
+    position_points = [0]
+    velocity_points = [0]
+    acceleration_points = [0]
+    check_points = [0]
+    motor_points = [0]
 
-    def start(self, param): 
+    def __init__(self):
+        return
+
+    def start(self, param, stage): 
 
         # Setup stuff
         global p
@@ -34,10 +36,10 @@ class Simulation():
         # Start sim
 
         # testing purposes
-        stage = [{'func': self.straight, "params": { "length": 0.61, "incline": 0 }},
-                {'func': self.hill, "params": { "length": 0.91/math.tan(45*math.pi/180), "height": -0.91}},
-                {'func': self.curve, "params": { "angle": 180, "curve_radius": 0.61}},
-                {'func': self.straight, "params": { "length": 8.5, "incline": 0 }}]
+        # stage = [{'func': self.straight, "params": { "length": 0.61, "incline": 0 }},
+        #         {'func': self.hill, "params": { "length": 0.91/math.tan(45*math.pi/180), "height": -0.91}},
+        #         {'func': self.curve, "params": { "angle": 180, "curve_radius": 0.61}},
+        #         {'func': self.straight, "params": { "length": 8.5, "incline": 0 }}]
 
         for element in stage:
             if self.isComplete == True: 
