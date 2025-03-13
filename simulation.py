@@ -71,12 +71,17 @@ class Simulation():
         omega_wheel = v0 / ( p['radius'] / 100) 
         omega_motor = omega_wheel * p['ratio']
 
-        torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)*c.Motor.efficiency
-        torque_axel =p['ratio'] * torque_motor * p['t_eff']
+        # Calculate motor efficiency
+        torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)
+
+        motor_eff = 0.43 if torque_motor > c.max_torque else -34163*torque_motor**2+245.16*torque_motor+0.1359
+        true_torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)*motor_eff
+
+        torque_axel =p['ratio'] * true_torque_motor * p['t_eff']
         
         # Calculating tangential forces
 
-        drag_cart = -c.g*(0.0052+0.75*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
+        drag_cart = -c.g*(0.001+0.5*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
         drag_air = -1/2*c.rho*v0**2*0.1*1
 
         gravity_t = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
@@ -102,7 +107,7 @@ class Simulation():
         # TODO: CURVE NEEDS TO BE FIXED, assuming very small tangential acceleration
 
         if isCurve:
-            a = 0
+            a = c.curve_accel
             #a = v0**2/p['radius']*0.8
             #a_tot = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*c.curve_eff
             #a = math.sqrt(a_tot**2+a_n**2)
@@ -110,11 +115,11 @@ class Simulation():
             a = (f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts']))
 
         t = self.time_points[-1] + c.dt
-        v = v0 + a*c.dt/2 # multiplied by 0.5 because velocity seemed to be too fast by a factor of 2
+        v = v0 + a*c.dt # multiplied by 0.5 because velocity seemed to be too fast by a factor of 2
         x = x0 + v0*c.dt+1/2*a*c.dt**2
 
         # Calculate motor power
-        power = (torque_motor/c.Motor.torque_s)*100
+        power = max((torque_motor/c.Motor.torque_s)*100,0)
 
         # Update lists
         self.time_points.append(t)
