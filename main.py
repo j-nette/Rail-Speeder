@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 graphPen = pg.mkPen(color=(2, 135, 195), width=2)
 checkpointPen = pg.mkPen(color=(238, 108, 77), width=1)
+gatePen = pg.mkPen(color=(36, 146, 37), width=1)
 sim = Simulation()
 
 DEFAULT_PARAMS = {
@@ -447,9 +448,10 @@ class MainWindow(QWidget):
   
   def plotCheckpoints(self, data):
     for graph in self.plots:
-      for i in range(0,len(data)):
-        line = pg.InfiniteLine(data[i], pen=checkpointPen)
-        line.addMarker('o')
+      for i in range(0,len(data[1:])):
+        pen = gatePen if 'Gate' in sections[i]['name'] else checkpointPen
+        line = pg.InfiniteLine(data[1:][i], pen=pen)
+        line.addMarker('>|',0.98)
         self.plots[graph].addItem(line)
 
       # if graph in self.checkpoints:
