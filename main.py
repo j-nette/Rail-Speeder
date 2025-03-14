@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import pyqtgraph as pg
 import numpy as np
+import math
 
 import logging
 from simulation import Simulation
@@ -245,11 +246,11 @@ class MainWindow(QWidget):
     self.velocity2 = QLabel("-")
     self.simOut.addRow(self.tr("&Section 2 Velocity [m/s]:"), self.velocity2)
     self.gate1 = QLabel("-")
-    self.simOut.addRow(self.tr("&Start Gate [-]:"), self.gate1) # "-" || "Triggered"
+    self.simOut.addRow(self.tr("&Start Gate [s]:"), self.gate1) # "-" || "Triggered"
     self.gate2 = QLabel("-")
-    self.simOut.addRow(self.tr("&Mid Gate [-]:"), self.gate2)
+    self.simOut.addRow(self.tr("&Mid Gate [s]:"), self.gate2)
     self.gate3 = QLabel("-")
-    self.simOut.addRow(self.tr("&End Gate [-]:"), self.gate3)
+    self.simOut.addRow(self.tr("&End Gate [s]:"), self.gate3)
     self.simOut.addRow("", QLabel(""))
     self.simOut.addRow("", QLabel(""))
     self.simOut.addRow(self.simButton)
@@ -447,24 +448,35 @@ class MainWindow(QWidget):
     self.totalTime.setText(str(round(data['time'][-1],4)))
   
   def plotCheckpoints(self, data):
+    time = []
+    distance = [0,0,0]
     for graph in self.plots:
       for i in range(0,len(data[1:])):
-        pen = gatePen if 'Gate' in sections[i]['name'] else checkpointPen
+        if 'Gate' in sections[i]['name']:
+          pen = gatePen
+          time.append(data[i])
+        else:
+          pen = checkpointPen
+          if graph == "position":
+            n = sections[i]['params']
+            if 'length' in n:
+              distance[len(time)] += float(sections[i]['params']['length'])
+            else:
+              distance[len(time)] += (float(n['angle'])*math.pi/180 * float(n['curve_radius']))
         line = pg.InfiniteLine(data[1:][i], pen=pen)
         line.addMarker('>|',0.98)
         self.plots[graph].addItem(line)
 
-      # if graph in self.checkpoints:
-      #   for i in range(0,len(self.checkpoints)):
-      #     #! Double check plot is the indicies here
-      #     self.checkpoints[graph][i].setValue(data[i])
-      #     # Different color for gates
-      # else:
-      #   self.checkpoints[graph] = {}
-
-      #   for i in range(0,len(data)):
-      #     self.checkpoints[graph][i] = pg.InfiniteLine(data[i])
-      #     self.plots[graph].addItem(self.checkpoints[graph][i])
+    self.velocity1.clear()
+    self.velocity1.setText(str(round((time[1]-time[0])/distance[1],4)))
+    self.velocity2.clear()
+    self.velocity2.setText(str(round((time[2]-time[1])/distance[2],4)))
+    self.gate1.clear()
+    self.gate1.setText(str(round(time[0],4)))
+    self.gate2.clear()
+    self.gate2.setText(str(round(time[1],4)))
+    self.gate3.clear()
+    self.gate3.setText(str(round(time[2],4)))
 
   def updatePlot(self, name, x, y):
     self.plots[name].clear()
