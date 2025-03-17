@@ -60,7 +60,7 @@ class Simulation():
             'motorpower': self.motor_points
         }
         
-    def step2(self, x0, deg, isCurve = False):
+    def step(self, x0, deg, isCurve = False):
         if self.time_points[-1] > c.max_time*60:
             self.isComplete = True
             return -1
@@ -125,81 +125,10 @@ class Simulation():
 
         return x
 
-
-    def step(self, x0, deg, isCurve = False):
-        return self.step2(x0, deg, isCurve)
-        if self.time_points[-1] > c.max_time*60:
-            self.isComplete = True
-            return -1
-            
-        v0 = self.velocity_points[-1]
-
-        omega_wheel = v0 / ( p['radius'] / 100) 
-        omega_motor = omega_wheel * p['ratio']
-
-        # Calculate motor efficiency
-        torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)
-
-        motor_eff = 0.43 if torque_motor > c.max_torque else -34163*torque_motor**2+245.16*torque_motor+0.1359
-        true_torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)*motor_eff
-
-        torque_axel =p['ratio'] * true_torque_motor * p['t_eff']
-        
-        # Calculating tangential forces
-
-        drag_cart = -c.g*(0.001+0.5*v0)*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
-        drag_air = -1/2*c.rho*v0**2*0.1*1
-
-        gravity_t = -9.81*self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
-
-        thrust = torque_axel/(p['radius']/100)
-
-        normal_front = p['v_mass']*c.g*math.cos(deg*math.pi/180)*(p['length'] - p['cog'])/(self.vehicle.front_wheel*p['length'])
-        normal_back = (p['v_mass']*c.g*math.cos(deg*math.pi/180)-self.vehicle.front_wheel*normal_front)/self.vehicle.back_wheel
-        friction_s = normal_back*p['cof']*self.vehicle.back_wheel
-
-        # Check for slip
-        actual_thrust = friction_s if (thrust > friction_s) else thrust
-
-        # if (thrust > friction_s): 
-        #     actual_thrust = thrust 
-        # else:
-        #     actual_thrust = friction_s
-        #     print('Slipped') 
-            
-
-        f_t = drag_cart + drag_air + actual_thrust + gravity_t 
-
-        # TODO: CURVE NEEDS TO BE FIXED, assuming very small tangential acceleration
-
-        if isCurve:
-            a = c.curve_accel
-            #a = v0**2/p['radius']*0.8
-            #a_tot = f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])*c.curve_eff
-            #a = math.sqrt(a_tot**2+a_n**2)
-        else:
-            a = (f_t/self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts']))
-
-        t = self.time_points[-1] + c.dt
-        v = v0 + a*c.dt # multiplied by 0.5 because velocity seemed to be too fast by a factor of 2
-        x = x0 + v0*c.dt+1/2*a*c.dt**2
-
-        # Calculate motor power
-        power = max((torque_motor/c.Motor.torque_s)*100,0)
-
-        # Update lists
-        self.time_points.append(t)
-        self.position_points.append(x)
-        self.velocity_points.append(v)
-        self.acceleration_points.append(a)
-        self.motor_points.append(power)
-
-        return x
-
     
     def straight(self, params):
         deg = params['incline']
-        length = params['length']
+        length = params['length']/math.cos(deg*math.pi/180)
 
         x = 0
         x0 = 0
