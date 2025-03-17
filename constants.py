@@ -8,7 +8,7 @@ rho = 1.2
 curve_eff = 0.7
 straight_eff = 0.5
 
-curve_accel = 0.1
+curve_accel = 0
 
 max_torque = 8.647/1000
 
