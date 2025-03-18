@@ -200,13 +200,22 @@ class MainWindow(QWidget):
     self.vehicle['cog'] = QLineEdit()
     self.vehicle['cog'].setPlaceholderText("From front of vehicle")
     self.vehicle['cog'].setText("19")
-    self.vehicleParams.addRow(self.tr("&CoG [cm]:"), self.vehicle['cog'])
+    self.vehicleParams.addRow(self.tr("&CoG X [cm]:"), self.vehicle['cog'])
+    self.vehicle['cog_y'] = QLineEdit()
+    self.vehicle['cog_y'].setText("5")
+    self.vehicleParams.addRow(self.tr("&CoG Y [cm]:"), self.vehicle['cog_y'])
     self.vehicle['length'] = QLineEdit()
     self.vehicle['length'].setText("20")
     self.vehicleParams.addRow(self.tr("&Length [cm]:"), self.vehicle['length'])
     self.vehicle['width'] = QLineEdit()
     self.vehicle['width'].setText("3")
     self.vehicleParams.addRow(self.tr("&Width [cm]:"), self.vehicle['width'])
+    self.vehicle['hitch'] = QLineEdit()
+    self.vehicle['hitch'].setText("2")
+    self.vehicleParams.addRow(self.tr("&Hitch Height (d) [cm]:"), self.vehicle['hitch'])
+    self.vehicle['hitch_ang'] = QLineEdit()
+    self.vehicle['hitch_ang'].setText("5")
+    self.vehicleParams.addRow(self.tr("&Hitch Angle [deg]:"), self.vehicle['hitch_ang'])
     self.vehicle['eff'] = QLineEdit()
     self.vehicle['eff'].setText("0.8")
     self.vehicleParams.addRow(self.tr("&Transmission Efficiency [-]:"), self.vehicle['eff'])
@@ -261,15 +270,15 @@ class MainWindow(QWidget):
 
 
     #Add widgets to display
-    self.grid.addWidget(self.plots['position'], 1, 1)
-    self.grid.addWidget(self.plots['velocity'], 1, 2)
-    self.grid.addWidget(self.plots['accel'], 2, 1)
-    self.grid.addWidget(self.plots['power'], 2, 2)
-    self.grid.addWidget(self.paramsBox, 1, 3)
+    self.grid.addWidget(self.plots['position'], 1, 1, 2, 1)
+    self.grid.addWidget(self.plots['velocity'], 1, 2, 2, 1)
+    self.grid.addWidget(self.plots['accel'], 3, 1)
+    self.grid.addWidget(self.plots['power'], 3, 2)
+    self.grid.addWidget(self.paramsBox, 1, 3, 3, 1)
     self.grid.addWidget(self.sections, 1, 4)
-    self.grid.addWidget(self.simBox, 2, 3)
+    self.grid.addWidget(self.simBox, 3, 4)
     self.grid.addWidget(self.generateSectionParams(), 2, 4)
-    self.grid.addWidget(self.loggingGroupBox, 3, 1, 1, 4)
+    self.grid.addWidget(self.loggingGroupBox, 4, 1, 1, 4)
 
     self.setLayout(self.grid)
 
@@ -397,8 +406,11 @@ class MainWindow(QWidget):
         'ratio': float(self.vehicle['ratio'].text()),
         'radius': float(self.vehicle['radius'].text()),
         'cog': float(self.vehicle['cog'].text()),
+        'cog_y': float(self.vehicle['cog_y'].text()),
         'length': float(self.vehicle['length'].text()),
         'width': float(self.vehicle['width'].text()),
+        'hitch': float(self.vehicle['hitch'].text()),
+        'hitch_ang': float(self.vehicle['hitch_ang'].text()),
         't_eff': float(self.vehicle['eff'].text()),
         'batteries': int(self.vehicle['batteries'].currentText()),
         'cof': float(self.vehicle['cof'].text())
