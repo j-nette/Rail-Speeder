@@ -4,6 +4,8 @@ from structures import Vehicle
 import math
 import logging
 
+import time
+
 class Simulation():
     isComplete = False
     vehicle = Vehicle()
@@ -19,10 +21,13 @@ class Simulation():
         return
 
     def start(self, param, stage): 
+    
 
         # Setup stuff
         global p
         p = param
+
+        start_time = time.time()
 
         self.time_points = [0]
         self.position_points = [0]
@@ -35,19 +40,25 @@ class Simulation():
 
         # Start sim
 
-        # testing purposes
-        # stage = [{'func': self.straight, "params": { "length": 0.61, "incline": 0 }},
-        #         {'func': self.hill, "params": { "length": 0.91/math.tan(45*math.pi/180), "height": -0.91}},
-        #         {'func': self.curve, "params": { "angle": 180, "curve_radius": 0.61}},
-        #         {'func': self.straight, "params": { "length": 8.5, "incline": 0 }}]
-
         for element in stage:
             if self.isComplete == True: 
                 print(self.time_points[-1])
-                logging.error('Maximum Run Time Exceeded.')
+                logging.error('Maximum Round Time Exceeded.')
                 break
+            elif start_time > c.timeout+start_time:
+                logging.error("Timeout - Simulation took too long to run")
             else:
                 element['func'](element['params'])
+                
+                # Check for cart going backwards
+                
+                if not len(self.position_points) == 1:
+                    if self.position_points[-1] < self.position_points[-2]:
+                        logging.error("Cart rolled backwards. Stopping simulation")
+                        break
+
+
+
             
         logging.info('Simulation Complete')
 
@@ -130,10 +141,10 @@ class Simulation():
         deg = params['incline']
         length = params['length']/math.cos(deg*math.pi/180)
 
-        x = 0
+        x = self.position_points[-1]
         x0 = 0
 
-        while x < length and not self.isComplete:
+        while x < length+self.position_points[-1] and not self.isComplete:
             x = self.step(x0,deg)
             x0 = x
 
@@ -153,8 +164,6 @@ class Simulation():
 
         x = 0
         x0 = 0
-
-        
 
         while x < length_slope/2:
             x = self.step(x0,deg)

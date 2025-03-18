@@ -12,6 +12,8 @@ curve_accel = 0
 
 max_torque = 8.647/1000
 
+timeout = 10
+
 
 
 class Cargo:
