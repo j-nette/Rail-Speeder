@@ -16,7 +16,7 @@ min_height = 7 #cm
 
 timeout = 10
 
-slip_threshold = 5 #cm
+slip_threshold = 1 #cm
 
 
 

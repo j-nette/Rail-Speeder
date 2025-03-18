@@ -67,6 +67,18 @@ sections = [
     }
   },
   {
+    'id': 2,
+    'name': 'Straight',
+    'func': sim.straight,
+    "tags": {
+      'length': True
+    },
+    'params': {
+      'incline': 0,
+      'length': 0.61
+    }
+  },
+  {
     'id': 4,
     'name': 'Curve',
     'func': sim.curve,
@@ -220,7 +232,7 @@ class MainWindow(QWidget):
     self.vehicleParams.addRow(self.tr("&Hitch Angle [deg]:"), self.vehicle['hitch_ang'])
     self.vehicle['eff'] = QLineEdit()
     self.vehicle['eff'].setText("0.8")
-    self.vehicleParams.addRow(self.tr("&Transmission Efficiency [-]:"), self.vehicle['eff'])
+    self.vehicleParams.addRow(self.tr("&Transmission Eff. [-]:"), self.vehicle['eff'])
     self.vehicle['batteries'] = QComboBox()
     self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
     self.vehicleParams.addRow(self.tr("&Batteries [-]:"), self.vehicle['batteries'])
@@ -268,7 +280,6 @@ class MainWindow(QWidget):
 
     self.simBox = QGroupBox("Simulation")
     self.simBox.setLayout(self.simOut)
-    # TODO: Add vertical colored lines to show gates, and sections
 
 
     #Add widgets to display
