@@ -37,32 +37,34 @@ class Simulation():
         self.motor_points = [0]
 
         self.isComplete = False
+        self.status = c.sim_status.COMPLETE
 
         # Start sim
 
         for element in stage:
             if self.isComplete == True: 
                 print(self.time_points[-1])
+                self.status = c.sim_status.TIMEOUT
                 logging.error('Maximum Round Time Exceeded.')
                 break
             elif start_time > c.timeout+start_time:
+                self.status = c.sim_status.RUNTIME
                 logging.error("Timeout - Simulation took too long to run")
+                break
             else:
-                element['func'](element['params'])
+                failed = element['func'](element['params'])
                 
                 # Check for cart going backwards
+                if failed:
+                    self.status = c.sim_status.SLIP
+                    logging.error("Cart rolled backwards past threshold. Stopping simulation")
+                    break
                 
-                if not len(self.position_points) == 1:
-                    if self.position_points[-1] < self.position_points[-2]:
-                        logging.error("Cart rolled backwards. Stopping simulation")
-                        break
-
-
-
-            
+          
         logging.info('Simulation Complete')
 
         return {
+            'status': self.status,
             'time': self.time_points,
             'position': self.position_points,
             'velocity': self.velocity_points,
@@ -142,15 +144,13 @@ class Simulation():
         length = params['length']/math.cos(deg*math.pi/180)
 
         x = self.position_points[-1]
-        x0 = 0
+        x0 = self.position_points[-1]
         isFailed = False
 
-        while x < length+self.position_points[-1] and not self.isComplete:
-            x = self.step(x0,deg)
-            x0 = x
+        while x - x0 < length and not self.isComplete:
+            x = self.step(x,deg)
 
-            if x < 0:
-                logging.error('Simulation failed: x<0')
+            if max(self.position_points) - x > c.slip_threshold:
                 isFailed = True
                 break
 
@@ -164,17 +164,15 @@ class Simulation():
 
         length_slope = length/math.cos(deg*math.pi/180)
 
-        x = 0
-        x0 = 0
+        x = self.position_points[-1]
+        x0 = self.position_points[-1]
         isFailed = False
 
-        while x < length_slope/2:
-            x = self.step(x0,deg)
-            x0 = x
+        while x - x0 < length_slope/2:
+            x = self.step(x,deg)
         
         while x < length_slope:
-            x= self.step(x0,-deg)
-            x0 = x
+            x = self.step(x,-deg)
         
 
         self.checkpoint()
@@ -184,13 +182,12 @@ class Simulation():
         radius = params['curve_radius']
         deg = params['angle']
 
-        x = 0
-        x0 = 0
+        x = self.position_points[-1]
+        x0 = self.position_points[-1]
         isFailed = False
 
-        while x < deg*math.pi/180*radius:
-            x = self.step(x0, 0, True)
-            x0 = x
+        while x - x0 < deg*math.pi/180*radius:
+            x = self.step(x, 0, True)
         
         self.checkpoint()
         return isFailed

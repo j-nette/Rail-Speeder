@@ -5,6 +5,8 @@ import pyqtgraph as pg
 import numpy as np
 import math
 
+import constants as c
+
 import logging
 from simulation import Simulation
 
@@ -330,7 +332,6 @@ class MainWindow(QWidget):
       if ('angle' in v): self.track['angle'].setText(str(v['angle'])) 
       params.addRow(self.tr("&Sweep Angle [deg]:"), self.track['angle'])
     params.addRow("", QLabel(""))
-    params.addRow("", QLabel(""))
 
     if (obj['name'] != '' and not 'Gate' in obj['name']):
       self.delButton = QPushButton("Delete Section")
@@ -479,16 +480,22 @@ class MainWindow(QWidget):
         line.addMarker('>|',0.98)
         self.plots[graph].addItem(line)
 
-    self.velocity1.clear()
-    self.velocity1.setText(str(round((time[1]-time[0])/distance[1],4)))
-    self.velocity2.clear()
-    self.velocity2.setText(str(round((time[2]-time[1])/distance[2],4)))
-    self.gate1.clear()
-    self.gate1.setText(str(round(time[0],4)))
-    self.gate2.clear()
-    self.gate2.setText(str(round(time[1],4)))
-    self.gate3.clear()
-    self.gate3.setText(str(round(time[2],4)))
+    # TODO: Fix these values when simulation fails
+    if not distance[1] == 0:
+      self.velocity1.clear()
+      self.velocity1.setText(str(round((time[1]-time[0])/distance[1],4)))
+    if not distance[2] == 0:
+      self.velocity2.clear()
+      self.velocity2.setText(str(round((time[2]-time[1])/distance[2],4)))
+    if len(time) > 0:
+      self.gate1.clear()
+      self.gate1.setText(str(round(time[0],4)))
+    if len(time) > 1:
+      self.gate2.clear()
+      self.gate2.setText(str(round(time[1],4)))
+    if len(time) > 2:
+      self.gate3.clear()
+      self.gate3.setText(str(round(time[2],4)))
 
   def updatePlot(self, name, x, y):
     self.plots[name].clear()

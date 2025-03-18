@@ -1,7 +1,7 @@
 import math
 
 g = 9.81
-max_time = 1 # [min]
+max_time = 2 # [min]
 dt = 0.01/10 # [s]
 rho = 1.2
 
@@ -16,6 +16,8 @@ min_height = 7 #cm
 
 timeout = 10
 
+slip_threshold = 5 #cm
+
 
 
 class Cargo:
@@ -28,7 +30,11 @@ class Motor:
     k = torque_s/(speed_nl/60*2*math.pi)
 
     
-
+class sim_status:
+    COMPLETE = 0
+    TIMEOUT = 1
+    SLIP = 2
+    RUNTIME = 3
 
 
 
