@@ -47,7 +47,8 @@ class Simulation():
                 logging.error('Maximum Run Time Exceeded.')
                 break
             else:
-                element['func'](element['params'])
+                if (element['func'](element['params']) == True):
+                    break
             
         logging.info('Simulation Complete')
 
@@ -65,13 +66,13 @@ class Simulation():
             self.isComplete = True
             return -1
         
-        phi = 5 # deg
+        phi = p['hitch_ang'] # deg
         phi_rad = phi*math.pi/180
-        area_f = 0.1 # m^2
+        area_f = (p['width'] * c.min_height) * 100**-2 # m^2
         mass_total = self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
         mu_cart = 0.5 # TODO: From cart tests
-        b = 5 # cm
-        d = 2 # cm
+        b = p['cog_y'] # cm
+        d = p['hitch'] # cm
             
         v0 = self.velocity_points[-1]
    
@@ -79,9 +80,9 @@ class Simulation():
         omega_motor = omega_wheel * p['ratio']
 
         # Calculate motor efficiency
-        torque_motor = (c.Motor.torque_s-c.Motor.k*omega_motor)
+        torque_motor = max(c.Motor.torque_s-c.Motor.k*max(omega_motor,0), 0) # Motor provides no torque when spinning above its rated RPM
         
-        torque_axel =p['ratio'] * torque_motor * p['t_eff']
+        torque_axel = p['ratio'] * torque_motor * p['t_eff']
         thrust = torque_axel/(p['radius']/100)
 
         # Calculate cart forces
@@ -95,7 +96,7 @@ class Simulation():
         f_v_int = c.g*(0.001+0.5*v0**2)*mass_total # TODO: determine vehicle coefficients?
 
         # Calculate vehicle normals
-        norm_front = ( mass_total*9.81*(p['length'] - p['cog']) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
+        norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
         norm_back = mass_total*9.81 + tension*math.sin(phi_rad) - norm_front
 
         friction_s = norm_back*p['cof']
@@ -106,7 +107,7 @@ class Simulation():
 
         f_t = actual_thrust - f_v_air - f_v_int - gravity - tension*math.cos(phi_rad)
 
-
+        # Calculate step variables
         a = f_t/mass_total
 
         t = self.time_points[-1] + c.dt
@@ -132,6 +133,7 @@ class Simulation():
 
         x = 0
         x0 = 0
+        isFailed = False
 
         while x < length and not self.isComplete:
             x = self.step(x0,deg)
@@ -139,10 +141,11 @@ class Simulation():
 
             if x < 0:
                 logging.error('Simulation failed: x<0')
+                isFailed = True
                 break
 
         self.checkpoint()
-        return
+        return isFailed
     
     def hill(self, params): #assuming no radius at top or bottom
         height = params['height']
@@ -153,8 +156,7 @@ class Simulation():
 
         x = 0
         x0 = 0
-
-        
+        isFailed = False
 
         while x < length_slope/2:
             x = self.step(x0,deg)
@@ -166,7 +168,7 @@ class Simulation():
         
 
         self.checkpoint()
-        return
+        return isFailed
     
     def curve(self, params): #check later, need centripetal accel
         radius = params['curve_radius']
@@ -174,13 +176,14 @@ class Simulation():
 
         x = 0
         x0 = 0
+        isFailed = False
 
         while x < deg*math.pi/180*radius:
             x = self.step(x0, 0, True)
             x0 = x
         
         self.checkpoint()
-        return
+        return isFailed
     
     
     def checkpoint(self, params = None): #note times of section ends & gates
@@ -188,7 +191,7 @@ class Simulation():
         self.check_points.append(t)
 
         print(t)
-        return 
+        return False
 
 
     
