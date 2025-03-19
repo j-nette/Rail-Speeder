@@ -236,9 +236,18 @@ class MainWindow(QWidget):
     self.vehicle['batteries'] = QComboBox()
     self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
     self.vehicleParams.addRow(self.tr("&Batteries [-]:"), self.vehicle['batteries'])
+    self.vehicle['motors'] = QComboBox()
+    self.vehicle['motors'].addItems(list(map(str, range(1,3))))
+    self.vehicleParams.addRow(self.tr("&Motors [-]:"), self.vehicle['motors'])
+    self.vehicle['awd'] = QCheckBox()
+    self.vehicle['awd'].setChecked(False)
+    self.vehicleParams.addRow(self.tr("&AWD [-]:"), self.vehicle['awd'])
+    self.vehicle['cof_f'] = QLineEdit()
+    self.vehicle['cof_f'].setText("0.7")
+    self.vehicleParams.addRow(self.tr("&Friction Coeff. Front [-]:"), self.vehicle['cof_f'])
     self.vehicle['cof'] = QLineEdit()
     self.vehicle['cof'].setText("0.7")
-    self.vehicleParams.addRow(self.tr("&Coefficient of Friction [-]:"), self.vehicle['cof'])
+    self.vehicleParams.addRow(self.tr("&Friction Coeff. Back [-]:"), self.vehicle['cof'])
 
     self.paramsBox.setLayout(self.vehicleParams)
     # TODO: Look into using QStackedWidget for the graphs?
@@ -425,9 +434,13 @@ class MainWindow(QWidget):
         'hitch_ang': float(self.vehicle['hitch_ang'].text()),
         't_eff': float(self.vehicle['eff'].text()),
         'batteries': int(self.vehicle['batteries'].currentText()),
+        'motors': int(self.vehicle['motors'].currentText()),
+        'awd': self.vehicle['awd'].isChecked(),
+        'cof_f': float(self.vehicle['cof_f'].text()),
         'cof': float(self.vehicle['cof'].text())
       }
     except Exception as e:
+      print(e)
       return self.alertMissingParams("Please fill in all vehicle parameters before starting the simulation.")
 
     self.simThread = QThread()

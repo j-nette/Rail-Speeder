@@ -78,11 +78,18 @@ class Simulation():
             self.isComplete = True
             return -1
         
+        # TODO: Determine vehicle coefficients
+        mu_vehicle = 0.05
+        mu_vehicle_roll = 0.5
+        
+        # From tests, mu_cart was between 0.0359 and 0.06157
+        mu_cart = 0.05 # TODO: From cart tests
+        mu_cart_roll = 0.01
+        
         phi = p['hitch_ang'] # deg
         phi_rad = phi*math.pi/180
         area_f = (p['width'] * c.min_height) * 100**-2 # m^2
         mass_total = self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
-        mu_cart = 0.5 # TODO: From cart tests
         b = p['cog_y'] # cm
         d = p['hitch'] # cm
             
@@ -99,23 +106,29 @@ class Simulation():
 
         # Calculate cart forces
         f_cart_air = 1*0.5*c.rho*v0**2*area_f #*p['carts']
-        f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*mu_cart*p['carts']
+        f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*mu_cart*p['carts']*(mu_cart+mu_cart_roll*v0**2)
+        # TODO: Double check if v or v^2
         
         tension = 1/math.cos(phi_rad)*(f_cart_air+f_cart_int)
 
         # Calculate vehicle forces
         f_v_air = 1*1/2*c.rho*v0**2*area_f
-        f_v_int = c.g*(0.001+0.5*v0**2)*mass_total # TODO: determine vehicle coefficients?
+        f_v_int = c.g*(mu_vehicle+mu_vehicle_roll*v0**2)*mass_total
 
         # Calculate vehicle normals
         norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
         norm_back = mass_total*9.81 + tension*math.sin(phi_rad) - norm_front
 
-        friction_s = norm_back*p['cof']
+        friction_b = norm_back*p['cof']
+        friction_f = norm_front*p['cof_f']
         gravity = mass_total*9.81*math.sin(deg*math.pi/180)
         
         # Check for slip
-        actual_thrust = friction_s if (thrust > friction_s) else thrust
+        if (p['awd']):
+          f_total = friction_b + friction_f
+          actual_thrust = f_total if (p['motors']*thrust > f_total) else p['motors']*thrust
+        else:
+          actual_thrust = friction_b if (p['motors']*thrust > friction_b) else p['motors']*thrust
 
         f_t = actual_thrust - f_v_air - f_v_int - gravity - tension*math.cos(phi_rad)
 
@@ -197,10 +210,4 @@ class Simulation():
         t = self.time_points[-1]
         self.check_points.append(t)
 
-        print(t)
         return False
-
-
-    
-
-    
