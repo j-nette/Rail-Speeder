@@ -351,7 +351,6 @@ class MainWindow(QWidget):
       self.track['angle'].textEdited.connect(lambda text : self.sectionUpdate(text, 'angle'))
       if ('angle' in v): self.track['angle'].setText(str(v['angle'])) 
       params.addRow(self.tr("&Sweep Angle [deg]:"), self.track['angle'])
-    params.addRow("", QLabel(""))
 
     if (obj['name'] != '' and not 'Gate' in obj['name']):
       self.delButton = QPushButton("Delete Section")
@@ -505,12 +504,12 @@ class MainWindow(QWidget):
         self.plots[graph].addItem(line)
 
     # TODO: Fix these values when simulation fails
-    if not distance[1] == 0:
+    if not (time[1] - time[0] == 0):
       self.velocity1.clear()
-      self.velocity1.setText(str(round((time[1]-time[0])/distance[1],4)))
-    if not distance[2] == 0:
+      self.velocity1.setText(str(round(distance[1]/(time[1]-time[0]),4)))
+    if not (time[2] - time[1] == 0):
       self.velocity2.clear()
-      self.velocity2.setText(str(round((time[2]-time[1])/distance[2],4)))
+      self.velocity2.setText(str(round(distance[2]/(time[2]-time[1]),4)))
     if len(time) > 0:
       self.gate1.clear()
       self.gate1.setText(str(round(time[0],4)))

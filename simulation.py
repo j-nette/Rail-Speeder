@@ -83,8 +83,8 @@ class Simulation():
         mu_vehicle_roll = 0.5
         
         # From tests, mu_cart was between 0.0359 and 0.06157
-        mu_cart = 0.05 # TODO: From cart tests
-        mu_cart_roll = 0.01
+        mu_cart = 0.005 # TODO: From cart tests
+        mu_cart_roll = 0.095
         
         phi = p['hitch_ang'] # deg
         phi_rad = phi*math.pi/180
@@ -106,14 +106,14 @@ class Simulation():
 
         # Calculate cart forces
         f_cart_air = 1*0.5*c.rho*v0**2*area_f #*p['carts']
-        f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*mu_cart*p['carts']*(mu_cart+mu_cart_roll*v0**2)
+        f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*p['carts']*(mu_cart+mu_cart_roll*v0)
         # TODO: Double check if v or v^2
         
         tension = 1/math.cos(phi_rad)*(f_cart_air+f_cart_int)
 
         # Calculate vehicle forces
         f_v_air = 1*1/2*c.rho*v0**2*area_f
-        f_v_int = c.g*(mu_vehicle+mu_vehicle_roll*v0**2)*mass_total
+        f_v_int = c.g*(mu_vehicle+mu_vehicle_roll*v0)*mass_total
 
         # Calculate vehicle normals
         norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
