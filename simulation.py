@@ -73,7 +73,7 @@ class Simulation():
             'motorpower': self.motor_points
         }
         
-    def step(self, x0, deg, isCurve = False):
+    def step(self, x0, deg):
         if self.time_points[-1] > c.max_time*60:
             self.isComplete = True
             return -1
@@ -183,9 +183,17 @@ class Simulation():
 
         while x - x0 < length_slope/2:
             x = self.step(x,deg)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
         
-        while x < length_slope:
+        while x - x0 < length_slope:
             x = self.step(x,-deg)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
         
 
         self.checkpoint()
@@ -199,8 +207,13 @@ class Simulation():
         x0 = self.position_points[-1]
         isFailed = False
 
-        while x - x0 < deg*math.pi/180*radius:
-            x = self.step(x, 0, True)
+        # Use arclength to find distance needed to travel
+        while x - x0 < deg*math.pi/180*radius: 
+            x = self.step(x, 0)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
         
         self.checkpoint()
         return isFailed
