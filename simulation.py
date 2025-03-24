@@ -108,8 +108,11 @@ class Simulation():
         f_cart_air = 1*0.5*c.rho*v0**2*area_f #*p['carts']
         f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*p['carts']*(mu_cart+mu_cart_roll*v0)
         # TODO: Double check if v or v^2
+
+        # TODO: Assumes here that all carts are instantaneously on an incline
+        f_cart_mass = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
         
-        tension = 1/math.cos(phi_rad)*(f_cart_air+f_cart_int)
+        tension = 1/math.cos(phi_rad)*(f_cart_air+f_cart_int+f_cart_mass)
 
         # Calculate vehicle forces
         f_v_air = 1*1/2*c.rho*v0**2*area_f
