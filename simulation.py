@@ -2,97 +2,228 @@ import constants as c
 from structures import Vehicle
 
 import math
-import numpy as np
+import logging
+
+import time
 
 class Simulation():
+    isComplete = False
     vehicle = Vehicle()
 
+    time_points = [0]
+    position_points = [0]
+    velocity_points = [0]
+    acceleration_points = [0]
+    check_points = [0]
+    motor_points = [0]
+
     def __init__(self):
+        return
+
+    def start(self, param, stage): 
+    
+
+        # Setup stuff
+        global p
+        p = param
+
+        start_time = time.time()
+
         self.time_points = [0]
         self.position_points = [0]
         self.velocity_points = [0]
         self.acceleration_points = [0]
+        self.check_points = [0]
+        self.motor_points = [0]
 
-    def start(self):      
-        t = 0 
-        isComplete = False
+        self.isComplete = False
+        self.status = c.sim_status.COMPLETE
 
-        # track stuff?
+        # Start sim
 
-        self.straight(0,10)
+        for element in stage:
+            if self.isComplete == True: 
+                print(self.time_points[-1])
+                self.status = c.sim_status.TIMEOUT
+                logging.error('Maximum Round Time Exceeded.')
+                break
+            elif start_time > c.timeout+start_time:
+                self.status = c.sim_status.RUNTIME
+                logging.error("Timeout - Simulation took too long to run")
+                break
+            else:
+                failed = element['func'](element['params'])
+                
+                # Check for cart going backwards
+                if failed:
+                    self.status = c.sim_status.SLIP
+                    logging.error("Cart rolled backwards past threshold. Stopping simulation")
+                    break
+                
+          
+        logging.info('Simulation Complete')
 
-        isComplete = True # add this as a condition to break out of time loop later
-
-        #
-
-        if isComplete is True:
-            print('Simulation Complete')
-
-            # print(self.time_points)
-            # print(self.position_points)
-            # print(self.velocity_points)
-            # print(self.acceleration_points)
-
-            return {
-                'time': self.time_points,
-                'position': self.position_points,
-                'velocity': self.velocity_points,
-                'acceleration': self.acceleration_points
-            }
+        return {
+            'status': self.status,
+            'time': self.time_points,
+            'position': self.position_points,
+            'velocity': self.velocity_points,
+            'acceleration': self.acceleration_points,
+            'checkpoints': self.check_points,
+            'motorpower': self.motor_points
+        }
         
+    def step(self, x0, deg):
+        if self.time_points[-1] > c.max_time*60:
+            self.isComplete = True
+            return -1
         
+        # TODO: Determine vehicle coefficients
+        mu_vehicle = 0.05
+        mu_vehicle_roll = 0.5
+        
+        # From tests, mu_cart was between 0.0359 and 0.06157
+        mu_cart = 0.005 # TODO: From cart tests
+        mu_cart_roll = 0.095
+        
+        phi = p['hitch_ang'] # deg
+        phi_rad = phi*math.pi/180
+        area_f = (p['width'] * c.min_height) * 100**-2 # m^2
+        mass_total = self.vehicle.totalWeight(p['v_mass'], p['c_mass'], p['carts'])
+        b = p['cog_y'] # cm
+        d = p['hitch'] # cm
+            
+        v0 = self.velocity_points[-1]
+   
+        omega_wheel = v0 / ( p['radius'] / 100) 
+        omega_motor = omega_wheel * p['ratio']
 
-    def step(self, x0, v0, deg):
-        omega_wheel = v0/self.vehicle.wheel_radius/100
-        omega_motor = omega_wheel * self.vehicle.gear_ratio
+        # Calculate motor efficiency
+        torque_motor = max(c.Motor.torque_s-c.Motor.k*max(omega_motor,0), 0) # Motor provides no torque when spinning above its rated RPM
+        
+        torque_axel = p['ratio'] * torque_motor * p['t_eff']
+        thrust = torque_axel/(p['radius']/100)
 
-        torque_motor = c.Motor.torque_s-c.Motor.k*omega_motor
-        torque_axel = self.vehicle.gear_ratio*torque_motor*Vehicle.efficiency
+        # Calculate cart forces
+        f_cart_air = 1*0.5*c.rho*v0**2*area_f #*p['carts']
+        f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*p['carts']*(mu_cart+mu_cart_roll*v0)
+        # TODO: Double check if v or v^2
 
+        # TODO: Assumes here that all carts are instantaneously on an incline
+        f_cart_mass = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
+        
+        tension = 1/math.cos(phi_rad)*(f_cart_air+f_cart_int+f_cart_mass)
 
-        # Calculating Forces
-        drag_cart = -c.g*(0.005+0.001*v0)*self.vehicle.totalWeight()*(1+c.Cargo.carts)
-        drag_air = -1/2*c.rho*v0*0.1*1
-        gravity = -9.81*self.vehicle.totalWeight()
-        thrust = torque_axel/(self.vehicle.wheel_radius/100)
-        normal_front = self.vehicle.mass/1000*c.g*math.cos(deg)*(self.vehicle.length-self.vehicle.cog)/(self.vehicle.front_wheel*self.vehicle.length)
-        normal_back = (self.vehicle.mass/1000*c.g*math.cos(deg)-self.vehicle.front_wheel*normal_front)/self.vehicle.back_wheel
-        friction_s = normal_back*self.vehicle.cof*self.vehicle.back_wheel
+        # Calculate vehicle forces
+        f_v_air = 1*1/2*c.rho*v0**2*area_f
+        f_v_int = c.g*(mu_vehicle+mu_vehicle_roll*v0)*mass_total
 
-        # Slip
-        actual_thrust = friction_s if (thrust > friction_s) else thrust
+        # Calculate vehicle normals
+        norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
+        norm_back = mass_total*9.81 + tension*math.sin(phi_rad) - norm_front
 
-        # Take forward & up as positive
-        f_net = drag_cart + drag_air + actual_thrust
+        friction_b = norm_back*p['cof']
+        friction_f = norm_front*p['cof_f']
+        gravity = mass_total*9.81*math.sin(deg*math.pi/180)
+        
+        # Check for slip
+        if (p['awd']):
+          f_total = friction_b + friction_f
+          actual_thrust = f_total if (p['motors']*thrust > f_total) else p['motors']*thrust
+        else:
+          actual_thrust = friction_b if (p['motors']*thrust > friction_b) else p['motors']*thrust
 
-        a = f_net/self.vehicle.totalWeight()
+        f_t = actual_thrust - f_v_air - f_v_int - gravity - tension*math.cos(phi_rad)
+
+        # Calculate step variables
+        a = f_t/mass_total
+
         t = self.time_points[-1] + c.dt
-        v = v0 + a*c.dt
+        v = v0 + a*c.dt 
         x = x0 + v0*c.dt+1/2*a*c.dt**2
 
+        # Calculate motor power
+        power = max((torque_motor/c.Motor.torque_s)*100,0)
 
         # Update lists
         self.time_points.append(t)
         self.position_points.append(x)
         self.velocity_points.append(v)
         self.acceleration_points.append(a)
+        self.motor_points.append(power)
 
-        return [x, v]
+        return x
+
     
-    def straight(self, v0, length):
-        x = 0
-        x0 = 0
+    def straight(self, params):
+        deg = params['incline']
+        length = params['length']/math.cos(deg*math.pi/180)
 
-        while x < length:
-            [x, v] = self.step(x0,v0,0)
-            x0 = x
-            v0 = v
-            
-        return
+        x = self.position_points[-1]
+        x0 = self.position_points[-1]
+        isFailed = False
+
+        while x - x0 < length and not self.isComplete:
+            x = self.step(x,deg)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
+
+        self.checkpoint()
+        return isFailed
     
+    def hill(self, params): #assuming no radius at top or bottom
+        height = params['height']
+        length = params['length']
+        deg = math.atan(height/(length/2))
 
+        length_slope = length/math.cos(deg*math.pi/180)
 
-# Start Simulation 
-sim = Simulation()    
-print(sim.start())
+        x = self.position_points[-1]
+        x0 = self.position_points[-1]
+        isFailed = False
 
+        while x - x0 < length_slope/2:
+            x = self.step(x,deg)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
+        
+        while x - x0 < length_slope:
+            x = self.step(x,-deg)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
+        
+
+        self.checkpoint()
+        return isFailed
+    
+    def curve(self, params): #check later, need centripetal accel
+        radius = params['curve_radius']
+        deg = params['angle']
+
+        x = self.position_points[-1]
+        x0 = self.position_points[-1]
+        isFailed = False
+
+        # Use arclength to find distance needed to travel
+        while x - x0 < deg*math.pi/180*radius: 
+            x = self.step(x, 0)
+
+            if max(self.position_points) - x > c.slip_threshold:
+                isFailed = True
+                break
+        
+        self.checkpoint()
+        return isFailed
+    
+    
+    def checkpoint(self, params = None): #note times of section ends & gates
+        t = self.time_points[-1]
+        self.check_points.append(t)
+
+        return False
