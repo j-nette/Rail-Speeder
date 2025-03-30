@@ -5,8 +5,6 @@ import pyqtgraph as pg
 import numpy as np
 import math
 
-import constants as c
-
 import logging
 from simulation import Simulation
 
@@ -111,26 +109,26 @@ sections = [
       'angle': 90
     }
   },
-  # {
-  #   'id': 7,
-  #   'name': 'Hill',
-  #   'func': sim.hill,
-  #   'tags': {
-  #     'length': True,
-  #     'height': True
-  #   },
-  #   'params': {}
-  # },
-  # {
-  #   'id': 8,
-  #   'name': 'Incline',
-  #   'func': sim.straight,
-  #   "tags": {
-  #     'length': True,
-  #     'incline': True
-  #   },
-  #   'params': {}
-  # },
+  {
+    'id': 7,
+    'name': 'Hill',
+    'func': sim.hill,
+    'tags': {
+      'length': True,
+      'height': True
+    },
+    'params': {}
+  },
+  {
+    'id': 8,
+    'name': 'Incline',
+    'func': sim.straight,
+    "tags": {
+      'length': True,
+      'incline': True
+    },
+    'params': {}
+  },
   {
     'id': 9,
     'name': 'Straight',
@@ -237,7 +235,7 @@ class MainWindow(QWidget):
     self.vehicle['batteries'].addItems(list(map(str, range(1,10))))
     self.vehicleParams.addRow(self.tr("&Batteries [-]:"), self.vehicle['batteries'])
     self.vehicle['motors'] = QComboBox()
-    self.vehicle['motors'].addItems(list(map(str, range(1,3))))
+    self.vehicle['motors'].addItems(list(map(str, range(1,5))))
     self.vehicleParams.addRow(self.tr("&Motors [-]:"), self.vehicle['motors'])
     self.vehicle['awd'] = QCheckBox()
     self.vehicle['awd'].setChecked(False)
@@ -250,7 +248,6 @@ class MainWindow(QWidget):
     self.vehicleParams.addRow(self.tr("&Friction Coeff. Back [-]:"), self.vehicle['cof'])
 
     self.paramsBox.setLayout(self.vehicleParams)
-    # TODO: Look into using QStackedWidget for the graphs?
 
 
     #Sections

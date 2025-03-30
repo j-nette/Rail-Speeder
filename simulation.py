@@ -22,7 +22,6 @@ class Simulation():
 
     def start(self, param, stage): 
     
-
         # Setup stuff
         global p
         p = param
@@ -40,7 +39,6 @@ class Simulation():
         self.status = c.sim_status.COMPLETE
 
         # Start sim
-
         for element in stage:
             if self.isComplete == True: 
                 print(self.time_points[-1])
@@ -59,7 +57,6 @@ class Simulation():
                     self.status = c.sim_status.SLIP
                     logging.error("Cart rolled backwards past threshold. Stopping simulation")
                     break
-                
           
         logging.info('Simulation Complete')
 
@@ -176,7 +173,7 @@ class Simulation():
     def hill(self, params): #assuming no radius at top or bottom
         height = params['height']
         length = params['length']
-        deg = math.atan(height/(length/2))
+        deg = math.atan(height/(length/2)) * 180/math.pi
 
         length_slope = length/math.cos(deg*math.pi/180)
 
