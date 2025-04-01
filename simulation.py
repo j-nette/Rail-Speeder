@@ -79,7 +79,6 @@ class Simulation():
         mu_vehicle = 0.05
         mu_vehicle_roll = 0.5
         
-        # From tests, mu_cart was between 0.0359 and 0.06157
         mu_cart = 0.005 # TODO: From cart tests
         mu_cart_roll = 0.095
         
@@ -104,7 +103,6 @@ class Simulation():
         # Calculate cart forces
         f_cart_air = 1*0.5*c.rho*v0**2*area_f #*p['carts']
         f_cart_int = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*p['carts']*(mu_cart+mu_cart_roll*v0)
-        # TODO: Double check if v or v^2
 
         # TODO: Assumes here that all carts are instantaneously on an incline
         f_cart_mass = 9.81*self.vehicle.totalWeight(0, p['c_mass'], p['carts'])*math.sin(deg*math.pi/180)
@@ -116,7 +114,7 @@ class Simulation():
         f_v_int = c.g*(mu_vehicle+mu_vehicle_roll*v0)*mass_total
 
         # Calculate vehicle normals
-        norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b + tension*math.cos(phi_rad)/(b+d) ) / p['length']
+        norm_front = ( mass_total*9.81*(p['length'] - p['cog'])*math.cos(deg*math.pi/180) - (f_v_air+f_v_int)*b - tension*math.cos(phi_rad)/(b+d) ) / p['length']
         norm_back = mass_total*9.81 + tension*math.sin(phi_rad) - norm_front
 
         friction_b = norm_back*p['cof']
